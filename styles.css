@@ -1,0 +1,33 @@
+.connections {
+  box-sizing: border-box;
+  display: block;
+  font-family: "Scaly Sans", "Segoe UI", Arial, sans-serif;
+}
+
+.connection-line {
+  display: block;
+  font-size: 1em;
+  border-bottom: 1px solid #555;
+  padding: 5px 5px;
+}
+
+.connection-button {
+  display: inline;
+  height: 1em;
+  padding: 0;
+  border: 0;
+  background-size: contain;
+  aspect-ratio: 1/1;
+  background-image: url("data:image/svg+xml;charset=UTF-8,<svg viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='50%' cy='50%' r='48%' stroke='black' stroke-width='2.5%' fill='none' /><path d='M 20,20,80,80 M 20,80,80,20' stroke='black' stroke-width='5%' stroke-linecap='round' /></svg>");
+  background-repeat: no-repeat;
+  float: inline-start;
+  margin-inline-end: 1em;
+  margin-top: 0.25em;
+  
+}
+
+.same-document {
+    text-decoration:underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 2px;
+}

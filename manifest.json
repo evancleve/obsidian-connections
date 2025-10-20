@@ -1,0 +1,11 @@
+{
+	"id": "obsidian-connections",
+	"name": "Connections",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Displays connections between notes.",
+	"author": "Eric Van Cleve",
+	"authorUrl": "https://obsidian.md",
+	"fundingUrl": "https://buymeacoffee.com/envancleve",
+	"isDesktopOnly": false
+}
