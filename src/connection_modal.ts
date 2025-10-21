@@ -34,7 +34,6 @@ export class ConnectionModal extends Modal {
     }));
 
     this.settings.push(new FocusableSetting(this.contentEl, 'submit-button')
-      .setName('Add Connection')
       .addButton((btn) =>
         btn
           .setButtonText('Add Connection')

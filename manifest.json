@@ -5,7 +5,7 @@
 	"minAppVersion": "0.15.0",
 	"description": "Displays connections between notes.",
 	"author": "Eric Van Cleve",
-	"authorUrl": "https://obsidian.md",
+	"authorUrl": "https://github.com/evancleve/obsidian-connections",
 	"fundingUrl": "https://buymeacoffee.com/envancleve",
 	"isDesktopOnly": false
 }
