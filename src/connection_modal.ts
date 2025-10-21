@@ -1,11 +1,6 @@
 import { AbstractInputSuggest, Modal, Setting, TFile, SearchComponent, ButtonComponent} from 'obsidian';
 import type ConnectionsPlugin from 'src/main';
-
-export interface ConnectionResult {
-  connectionType: string;
-  toFile: TFile;
-  fromFile: TFile;
-}
+import {ConnectionData} from 'src/main';
 
 export class ConnectionModal extends Modal {
   private cp: ConnectionsPlugin;
@@ -16,7 +11,7 @@ export class ConnectionModal extends Modal {
   private settings: Array<FocusableSetting>;
   
 
-  constructor(cp: ConnectionsPlugin, currentFile: TFile, previousConnectionTypes: Array<string>, onSubmit: (result: ConnectionResult) => void) {
+  constructor(cp: ConnectionsPlugin, currentFile: TFile, previousConnectionTypes: Array<string>, onSubmit: (result: ConnectionData) => void) {
     super(cp.app);
     this.cp = cp;
     this.fromFile = currentFile;
@@ -29,13 +24,13 @@ export class ConnectionModal extends Modal {
     this.settings.push(new FocusableSetting(this.contentEl, 'connection-type')  
     .setName('Connection Type')  
     .addSearch((text) => {
-      new ConnectionTypeSuggestInput(cp, text.inputEl, this);
+      new ConnectionTypeSuggestInput(cp, this, text.inputEl);
     }));
 
     this.settings.push(new FocusableSetting(this.contentEl, 'to-note')  
     .setName('Search for Note')  
     .addSearch((text) => {
-      new NoteSuggestInput(cp, text.inputEl, this);
+      new NoteSuggestInput(cp, this, text.inputEl);
     }));
 
     this.settings.push(new FocusableSetting(this.contentEl, 'submit-button')
@@ -46,15 +41,15 @@ export class ConnectionModal extends Modal {
           .setCta()
           .onClick(() => {
             this.close();
-            onSubmit({
-              'connectionType': this.connectionType,
-              'toFile': this.toFile,
-              'fromFile': this.fromFile
-            });
+            onSubmit(new ConnectionData(this.fromFile, this.toFile, this.connectionType));
           }
     )));
   }
 
+  /**
+	 * Given the input element which just lost focus, focus on the next one.
+	 * @param {CustomEvent} evt - An event containing a reference to the blurred setting.
+	 */
   focusOnNextSetting(evt: CustomEvent) {
     for (let idx = 0; idx < this.settings.length; idx++) {
       if (this.settings[idx] === evt.detail.identity) {
@@ -63,6 +58,10 @@ export class ConnectionModal extends Modal {
     }
   }
   
+  /**
+	 * In response to an event, call the ConnectionPlugin's removeConnectionType method.
+	 * @param {CustomEvent} evt - An event containing the connectionType to remove.
+	 */
   removeConnectionType(evt: CustomEvent) {
     this.cp.removeConnectionType(evt.detail.connectionType);
   }
@@ -70,14 +69,14 @@ export class ConnectionModal extends Modal {
 
 export class NoteSuggestInput extends AbstractInputSuggest<TFile> {
   private availableFiles: Array<TFile>;
-  private inputEl: HTMLInputElement;
   private cm: ConnectionModal;
+  private inputEl: HTMLInputElement;
   private folderNoteRegexp = new RegExp('(?<foldername>[^\\\\]+?)\\/\\k<foldername>\\.(?i:md)');
 
-  constructor(cp: ConnectionsPlugin, inputEl: HTMLInputElement, cm: ConnectionModal) {
+  constructor(cp: ConnectionsPlugin, cm: ConnectionModal, inputEl: HTMLInputElement) {
     super(cp.app, inputEl);
-    this.inputEl = inputEl;
     this.cm = cm;
+    this.inputEl = inputEl;
     this.availableFiles = this.app.vault.getMarkdownFiles().filter((note)=> {return note.parent != null && note != cm.fromFile});
   }
 
@@ -103,13 +102,13 @@ export class NoteSuggestInput extends AbstractInputSuggest<TFile> {
 }
 
 export class ConnectionTypeSuggestInput extends AbstractInputSuggest<string> {
-  private inputEl: HTMLInputElement;
   private cm: ConnectionModal;
+  private inputEl: HTMLInputElement;
 
-  constructor(cp: ConnectionsPlugin, inputEl: HTMLInputElement, cm: ConnectionModal) {
+  constructor(cp: ConnectionsPlugin, cm: ConnectionModal, inputEl: HTMLInputElement) {
     super(cp.app, inputEl);
-    this.inputEl = inputEl;
     this.cm = cm;
+    this.inputEl = inputEl;
   }
 
   getSuggestions(query: string): string[] {
@@ -120,12 +119,11 @@ export class ConnectionTypeSuggestInput extends AbstractInputSuggest<string> {
     let btn = el.createEl('button', 'connection-button')
     btn.dataset['connectionType'] = connectionType;
     btn.addEventListener('click', (ev: PointerEvent) => {
-			let clickedBtn = ev.currentTarget;
-			if (clickedBtn && clickedBtn instanceof HTMLButtonElement) {
-				let event = new CustomEvent("removeConnectionType", {bubbles: true, detail: { connectionType: clickedBtn.dataset['connectionType'] }});
-        this.inputEl.dispatchEvent(event);
-			}
-		
+			ev.stopPropagation();
+      let clickedBtn = ev.currentTarget as HTMLButtonElement;
+      let event = new CustomEvent("removeConnectionType", {bubbles: true, detail: { connectionType: clickedBtn.dataset['connectionType'] }});
+      this.inputEl.dispatchEvent(event);
+      clickedBtn.parentElement?.remove();		
 		});
     el.createEl('span', { text: connectionType });
     

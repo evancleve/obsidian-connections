@@ -1,7 +1,18 @@
-import { Plugin, TFile} from 'obsidian';
-import { ConnectionModal, ConnectionResult } from './connection_modal';
+import { CachedMetadata, Plugin, TFile} from 'obsidian';
+import { ConnectionModal } from './connection_modal';
 import { createLink } from "../utils/links";
  
+export class ConnectionData {
+	fromFile: TFile;
+	toFile: TFile;
+	connectionType: string;
+
+	constructor(ff: TFile, tf: TFile, ct: string) {
+		this.fromFile = ff;
+		this.toFile = tf;
+		this.connectionType = ct;
+	}
+}
 
 export default class ConnectionsPlugin extends Plugin {
 	
@@ -18,7 +29,7 @@ export default class ConnectionsPlugin extends Plugin {
 			callback: () => {
 				const currentFile = this.app.workspace.getActiveFile();
 				if (currentFile) {
-					new ConnectionModal(this, currentFile, this.previousConnectionTypes, (result: ConnectionResult) => this.addConnection(result)).open()
+					new ConnectionModal(this, currentFile, this.previousConnectionTypes, (result: ConnectionData) => this.addConnection(result)).open()
 				}
 			},
 		});
@@ -40,6 +51,10 @@ export default class ConnectionsPlugin extends Plugin {
 		}
 	}
 
+	/**
+	 * Refreshes the content of the Connections footer.
+	 * @param {TFile} file - The active file
+	 */
 	async refreshConnections(file: TFile) {
 		let leaf = this.app.workspace.getMostRecentLeaf();
 		if (leaf) {
@@ -55,9 +70,13 @@ export default class ConnectionsPlugin extends Plugin {
 		}
 	}
 
+	/**
+	 * Finds and returns connections embedded in the current note's frontmatter
+	 * @param {TFile} file - The selected file
+	 * @returns {HTMLDivElement}
+	 */
 	async getForwardConnections(file: TFile) {
 		const metadata = await this.getMetadata(file);
-		let linkRegExp = RegExp('\\[?\\[?([^\\[\\]]+)\\]?\\]?');
 		let forwardConnections = document.createElement('div');
 		forwardConnections.addClass('connections-group');
 		if (metadata) {
@@ -68,7 +87,7 @@ export default class ConnectionsPlugin extends Plugin {
 					let strippedLink = this.stripLink(connection['link']);
 					let linkedFile = this.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
 					if (linkedFile) {
-						let connectionLine = this.createConnectionLine(file, connectionType, linkedFile);
+						let connectionLine = this.createConnectionLine(new ConnectionData(file, linkedFile, connectionType));
 						if (connectionLine) {
 							forwardConnections.appendChild(connectionLine);
 						}
@@ -79,11 +98,16 @@ export default class ConnectionsPlugin extends Plugin {
 		return forwardConnections;
 	}
 
+	/**
+	 * Finds backwards links to the current note and then returns any connections they might have.
+	 * @param {TFile} file - The selected file
+	 * @returns {HTMLDivElement}
+	 */
 	async getBackwardConnections(file: TFile) {
 		let bFoundConnectionsFiles = new Set<string>();
 		let backwardConnections = document.createElement('div');
 		backwardConnections.addClass('connections-group');
-		//@ts-ignore - undocumented feature, but a feature nonetheless!
+		//@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
 		let bLinksFiles = this.app.metadataCache.getBacklinksForFile(file);
 		for (let bLinkFile of bLinksFiles.keys()) {
 			for (let bLink of bLinksFiles.get(bLinkFile)) {
@@ -104,21 +128,22 @@ export default class ConnectionsPlugin extends Plugin {
 							let strippedLink = this.stripLink(connection['link']);
 							let linkedFile = this.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
 							if (linkedFile && linkedFile.path === file.path) {
-								let connectionLine = this.createConnectionLine(bLinkFile, connectionType, file, false);
+								let connectionLine = this.createConnectionLine(new ConnectionData(bLinkFile, file, connectionType), false);
 								if (connectionLine) {
 									backwardConnections.appendChild(connectionLine);
-								}
-							}
-						
-						}
-					}
-				}
-			}
+			}}}}}}
 		}
 		return backwardConnections;
 	}
 	
-	createConnectionLine(fromFile: TFile, connectionType: string, toFile: TFile, forward: boolean = true) {
+	/**
+	 * Create HTML elements describing the connection.
+	 * @param {ConnectionData} cData - A  object describing the connection.
+	 * @param {boolean} forward - Whether or not the connection is a forward or backward connection
+	 * @returns {HTMLDivElement}
+	 */
+	createConnectionLine(cData: ConnectionData, forward: boolean = true) {
+		const { fromFile, toFile, connectionType } = cData;
 		let connectionLine = document.createElement('div');
 		connectionLine.addClass('connection-line');
 		let fromFileText, toFileText;
@@ -151,81 +176,116 @@ export default class ConnectionsPlugin extends Plugin {
 			toSpan.addClass('same-document');
 		}
 		let btn = connectionLine.createEl('button', 'connection-button');
-		btn.dataset['fromFile'] = fromFile.path;
-		btn.dataset['connectionType'] = connectionType;
-		btn.dataset['toFile'] = toFile.path;
-		btn.dataset['forward'] = String(forward);
+		btn.dataset.fromFile = fromFile.path;
+		btn.dataset.toFile = toFile.path;
+		btn.dataset.connectionType = connectionType;
+		btn.dataset.forward = String(forward);
 		btn.addEventListener('click', (ev: PointerEvent) => {
 			let clickedBtn = ev.currentTarget;
 			if (clickedBtn && clickedBtn instanceof HTMLButtonElement) {
-				this.removeConnection(clickedBtn.dataset['fromFile'], clickedBtn.dataset['connectionType'], clickedBtn.dataset['toFile'], clickedBtn.dataset['forward']);
+				let sourceFile, linkedFile;
+				let {fromFile, toFile, connectionType} = clickedBtn.dataset
+				let forward = (clickedBtn.dataset.forward === 'true');
+				if (fromFile === undefined || toFile === undefined || connectionType === undefined) {
+					console.error('Missing parameters required to remove connection!');
+					return;
+				}
+				if (forward) {
+					sourceFile = this.app.vault.getFileByPath(fromFile);
+					linkedFile = this.app.vault.getFileByPath(toFile);
+				} else {
+					sourceFile = this.app.vault.getFileByPath(toFile);
+					linkedFile = this.app.vault.getFileByPath(fromFile);
+				}
+				if (sourceFile instanceof TFile && linkedFile instanceof TFile ) {
+					this.removeConnection(new ConnectionData(sourceFile, linkedFile, connectionType));
+				}
 			}
-		
 		});
 		connectionLine.createEl('br');
 		return connectionLine;
 	}
 
+	/**
+	 * Retrieve metadata for a given TFile.
+	 * @param {TFile} file - The selected file
+	 * @returns {CachedMetadata}
+	 */
 	async getMetadata(file: TFile): Promise<Record<string, any> | null> {
 		const fileCache = this.app.metadataCache.getFileCache(file);
 		return fileCache?.frontmatter || null;
 	}
 
-	async addConnection(cResult: ConnectionResult) {
-		if (cResult['fromFile']) {
-			await this.app.fileManager.processFrontMatter(cResult['fromFile'], (frontmatter) => {
+	/**
+	 * Adds a connection between files
+	 * @param {ConnectionData} cData - A  object describing the connection.
+	 */
+	async addConnection(cData: ConnectionData) {
+		const { fromFile, toFile, connectionType } = cData;
+		if (fromFile) {
+			await this.app.fileManager.processFrontMatter(fromFile, (frontmatter) => {
 				if (!frontmatter['connections']) {
 					frontmatter['connections'] = [];
 				}
 				frontmatter['connections'].push({
-					'connectionType': cResult['connectionType'],
-					'link': `[[${this.app.metadataCache.fileToLinktext(cResult['toFile'], '')}]]`
+					'connectionType': connectionType,
+					'link': `[[${this.app.metadataCache.fileToLinktext(toFile, '')}]]`
 				})
 			});
 		}
-		if (!(this.previousConnectionTypes.includes(cResult['connectionType']))) {
-			this.previousConnectionTypes.unshift(cResult['connectionType'])
-			await this.saveData(this.previousConnectionTypes);
+
+		// If the last connectionType we used isn't at the front of the list, move it there.
+		const index = this.previousConnectionTypes.indexOf(connectionType);
+		if (index == 0) {
+			return;
+		} else if (index > 0) {	
+    		this.previousConnectionTypes.splice(index, 1);
 		}
+		this.previousConnectionTypes.unshift(connectionType)
+		await this.saveData(this.previousConnectionTypes);
 	}
 
+	/**
+	 * Removes a connection type from the list of previous connection types
+	 * @param {string} connectionType - The connection type to remove.
+	 */
 	async removeConnectionType(connectionType: string) {
 		const index = this.previousConnectionTypes.indexOf(connectionType);
   		if (index > -1) {
     		this.previousConnectionTypes.splice(index, 1);
-			this.saveData;
+			await this.saveData(this.previousConnectionTypes);
 	  	}
 	}
 
-	async removeConnection(fromFile: any, connectionType: any, toFile: any, forward: any) {
-		let sourceFile, linkedFile;
-		if (forward) {
-			sourceFile = this.app.vault.getFileByPath(fromFile);
-			linkedFile = this.app.vault.getFileByPath(toFile);
-		} else {
-			sourceFile = this.app.vault.getFileByPath(toFile);
-			linkedFile = this.app.vault.getFileByPath(fromFile);
-		}
-		if (sourceFile) {
-			await this.app.fileManager.processFrontMatter(sourceFile, frontmatter => {
-				if (frontmatter['connections']) {
-					let pos = 0;
-					for (let connection of frontmatter['connections']) {
-						let resolvedLink = this.app.metadataCache.getFirstLinkpathDest(this.stripLink(connection['link']), '');
-						if (connection['connectionType'] == connectionType && linkedFile == resolvedLink) {
-							frontmatter['connections'].splice(pos, 1);
-						}
-						pos++;
-					}
-				}
-				if (frontmatter['connections'].length == 0) {
-					delete frontmatter['connections'];
-				}
-			});
 
-		}
+	/**
+	 * Removes a connection between files
+	 * @param {ConnectionData} cData - A  object describing the connection.
+	 */
+	async removeConnection(cData: ConnectionData) {
+		const { fromFile, toFile, connectionType } = cData;
+		await this.app.fileManager.processFrontMatter(fromFile, frontmatter => {
+			if (frontmatter['connections']) {
+				let pos = 0;
+				for (let connection of frontmatter['connections']) {
+					let resolvedLink = this.app.metadataCache.getFirstLinkpathDest(this.stripLink(connection['link']), '');
+					if (connection['connectionType'] == connectionType && toFile == resolvedLink) {
+						frontmatter['connections'].splice(pos, 1);
+					}
+					pos++;
+				}
+			}
+			if (frontmatter['connections'].length == 0) {
+				delete frontmatter['connections'];
+			}
+		});
 	}
 
+	/**
+	 * Removes [[]]]] from a file link, if required.
+	 * @param {link} string - A  object describing the connection.
+	 * @returns {string}
+	 */
 	stripLink(link: string) {
 		let linkRegExp = RegExp('\\[?\\[?([^\\[\\]]+)\\]?\\]?');
 		let linkResults;
