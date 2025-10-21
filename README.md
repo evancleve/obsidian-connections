@@ -1,6 +1,6 @@
 # Obsidian Connections
 
-This plugin allows you to define and view connections between your notes. 
+This plugin allows you to define and view named connections between your notes. 
 
 To add a connection, use the "Connections: Add a connection to another note" command.
 
@@ -22,4 +22,4 @@ This plugin borrows a utility library from [obsidian-tagged-documents-viewer](ht
 
 ## Support
 
-If you have any suggestions on features I could, add please let me know via my [github](https://github.com/evancleve/obsidian-connections)! If you feel like donating some spare change, feel free to do that here: [https://buymeacoffee.com/envancleve](https://buymeacoffee.com/envancleve).
+If you have any suggestions on features I could, add please let me know via my [GitHub](https://github.com/evancleve/obsidian-connections)! If you feel like donating some spare change, feel free to do that here: [https://buymeacoffee.com/envancleve](https://buymeacoffee.com/envancleve).

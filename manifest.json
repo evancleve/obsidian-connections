@@ -1,9 +1,9 @@
 {
-	"id": "obsidian-connections",
+	"id": "connections",
 	"name": "Connections",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Displays connections between notes.",
+	"description": "Allows you to define and view named connections between your notes",
 	"author": "Eric Van Cleve",
 	"authorUrl": "https://github.com/evancleve/obsidian-connections",
 	"fundingUrl": "https://buymeacoffee.com/envancleve",
