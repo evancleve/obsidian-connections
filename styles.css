@@ -31,3 +31,7 @@
     text-decoration-style: dashed;
     text-underline-offset: 2px;
 }
+
+.connections-internal-link {
+  cursor: pointer;
+}

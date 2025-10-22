@@ -1,4 +1,4 @@
-//stolen wholesale from https://github.com/mgeduld/obsidian-tagged-documents-viewer/blob/master/src/utils/links.ts, which was...
+//adapted from https://github.com/mgeduld/obsidian-tagged-documents-viewer/blob/master/src/utils/links.ts, which was...
 //adapted from https://github.com/Aidurber/tag-page-preview/blob/master/src/utils/render.ts
 
 import { App, OpenViewState, TFile, Platform } from "obsidian";
@@ -28,11 +28,12 @@ async function openLink(
 		dest,
 		currFile.path
 	);
-	if (!destFile) return;
-	const mode = (app.vault as any).getConfig("defaultViewMode");
+	if (destFile == null) return;
+	//@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
+	const mode = app.vault.getConfig("defaultViewMode");
 	const leaf = app.workspace.getLeaf(isMetaKey(event));
 	await leaf.openFile(
-		destFile as TFile,
+		destFile,
 		{ active: true, mode } as OpenViewState
 	);
 }
@@ -49,9 +50,8 @@ export function createLink(
 	onClick?: (e: MouseEvent) => void
 ): HTMLAnchorElement {
 	const link = createTextContent("a", file.basename);
-	link.style.cursor = "pointer";
 	link.dataset.href = file.path;
-	link.classList.add("internal-link");
+	link.classList.add("internal-link", "connections-internal-link");
 	link.onclick = (e: MouseEvent) => {
 		openLink(app, file.path, file, e);
 
