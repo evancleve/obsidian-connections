@@ -12,8 +12,7 @@ export class ConnectionData {
 		this.fromFile = ff;
 		this.toFile = tf;
 		this.connectionType = ct;
-	}
-}
+}}
 
 interface MappedType {
 	mapProperty: string,
@@ -60,8 +59,7 @@ export default class ConnectionsPlugin extends Plugin {
 	async onunload(): Promise<void> {
 		if (this.footerTextElement) {
 			this.footerTextElement.remove();
-		}
-	}
+	}}
 
 	/**
 	 * Refreshes the content of the Connections footer.
@@ -78,9 +76,7 @@ export default class ConnectionsPlugin extends Plugin {
 			if (file) {
 				this.footerTextElement.appendChild(await this.getForwardConnections(file));
 				this.footerTextElement.appendChild(await this.getBackwardConnections(file));
-			}
-		}
-	}
+	}}}
 
 	/**
 	 * Finds and returns connections embedded in the current note's frontmatter
@@ -92,9 +88,16 @@ export default class ConnectionsPlugin extends Plugin {
 		let forwardConnections = document.createElement('div');
 		forwardConnections.addClass('connections-group');
 		if (metadata) {
-			let connections = metadata['connections']
-			if (connections) {
-				for (let connection of connections) {
+			this.getUnmappedForwardConnections(file, metadata, forwardConnections);
+			this.getMappedForwardConnections(file, metadata, forwardConnections);
+		}
+		return forwardConnections;
+	}
+
+	getUnmappedForwardConnections(file: TFile, metadata: Record<string, any>, forwardConnections: HTMLElement) {
+		let unmappedConnections = metadata['connections']
+			if (unmappedConnections) {
+				for (let connection of unmappedConnections) {
 					let connectionType = connection['connectionType'];
 					let strippedLink = this.stripLink(connection['link']);
 					let linkedFile = this.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
@@ -102,13 +105,23 @@ export default class ConnectionsPlugin extends Plugin {
 						let connectionLine = this.createConnectionLine(new ConnectionData(file, linkedFile, connectionType));
 						if (connectionLine) {
 							forwardConnections.appendChild(connectionLine);
-						}
-					}
-				}
-			}
-		}
-		return forwardConnections;
-	}
+
+	}}}}}
+
+	getMappedForwardConnections(file: TFile, metadata: Record<string, any>, forwardConnections: HTMLElement) {
+		for (let mappedType of this.settings.mappedTypes) {
+			if (metadata[mappedType.mapProperty]) {
+					let propertyValue = metadata[mappedType.mapProperty];
+					let connectionType = mappedType.mapConnectionType;
+					let strippedLink = this.stripLink(propertyValue);
+					let linkedFile = this.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
+					if (linkedFile) {
+						let connectionLine = this.createConnectionLine(new ConnectionData(file, linkedFile, connectionType));
+						if (connectionLine) {
+							forwardConnections.appendChild(connectionLine);
+
+	}}}}}
+
 
 	/**
 	 * Finds backwards links to the current note and then returns any connections they might have.
@@ -125,9 +138,7 @@ export default class ConnectionsPlugin extends Plugin {
 			for (let bLink of bLinksFiles.get(bLinkFile)) {
 				if (bLink['key'] && bLink['key'].includes('connections')) {
 					bFoundConnectionsFiles.add(bLinkFile);
-				}
-			}
-		}
+		}}}
 		for (let bLinkFileName of bFoundConnectionsFiles) {
 			let bLinkFile = this.app.metadataCache.getFirstLinkpathDest(bLinkFileName, '');
 			if (bLinkFile) {
@@ -143,8 +154,8 @@ export default class ConnectionsPlugin extends Plugin {
 								let connectionLine = this.createConnectionLine(new ConnectionData(bLinkFile, file, connectionType), false);
 								if (connectionLine) {
 									backwardConnections.appendChild(connectionLine);
-			}}}}}}
-		}
+			
+		}}}}}}}
 		return backwardConnections;
 	}
 	
@@ -211,9 +222,7 @@ export default class ConnectionsPlugin extends Plugin {
 				}
 				if (sourceFile instanceof TFile && linkedFile instanceof TFile ) {
 					this.removeConnection(new ConnectionData(sourceFile, linkedFile, connectionType));
-				}
-			}
-		});
+		}}});
 		connectionLine.createEl('br');
 		return connectionLine;
 	}
@@ -274,16 +283,14 @@ export default class ConnectionsPlugin extends Plugin {
 			if (index == -1) {
 				this.settings.mappedTypes.push({mapProperty: mapProperty, mapConnectionType: mapConnectionType});
 				await this.saveData(this.settings);
-			}
-	}
+	}}
 
 	async removeMappedConnectionType(mapProperty: string, mapConnectionType: string) {
 			let index = this.findMappedConnectionType(mapProperty, mapConnectionType);
 			if (index != -1) {
 				this.settings.mappedTypes.splice(index, 1);
 				await this.saveData(this.settings);
-			}
-	}
+	}}
 
 	findMappedConnectionType (mapProperty: string, mapConnectionType: string) {
 		for (let index = 0; index < this.settings.mappedTypes.length; index++ ) {
@@ -330,6 +337,5 @@ export default class ConnectionsPlugin extends Plugin {
 			return linkResults[1];
 		} else {
 			return link;
-		}
-	}
+	}}
 }

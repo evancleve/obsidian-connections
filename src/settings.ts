@@ -18,7 +18,7 @@ export class ConnectionSettingTab extends PluginSettingTab {
         new Setting(mappingContainer).setHeading()
             .setName("Add Mapped Connection Type");
             
-        new Setting(mappingContainer)
+        let newMapping = new Setting(mappingContainer)
             .setDesc("A description of this feature!")
             .addText(async (text) => {
                 text.setPlaceholder("frontmatter property")
@@ -42,6 +42,9 @@ export class ConnectionSettingTab extends PluginSettingTab {
                 this.display();
             }));
             
+            console.log(newMapping);
+
+            //Display existing mapped type entries.
             for (let mappedType of this.plugin.settings.mappedTypes) {
                 let mapContainer = mappingContainer.createDiv('map-container');
                 let mapPropText = mapContainer.createEl('span')
