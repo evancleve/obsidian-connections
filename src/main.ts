@@ -1,5 +1,6 @@
 import { CachedMetadata, Plugin, TFile} from 'obsidian';
 import { ConnectionModal } from './connection_modal';
+import { ConnectionSettingTab } from './settings'
 import { createLink } from "../utils/links";
  
 export class ConnectionData {
@@ -14,14 +15,25 @@ export class ConnectionData {
 	}
 }
 
+interface MappedType {
+	mapProperty: string,
+	mapConnectionType: string
+}
+
+interface ConnectionSettings {
+	unmappedTypes: Array<string>;
+	mappedTypes: Array<MappedType>;
+}
+
 export default class ConnectionsPlugin extends Plugin {
 	
 	footerTextElement : HTMLElement;
-	previousConnectionTypes : Array<string>;
+	settings: ConnectionSettings;
 
 	async onload(): Promise<void> {
 		
-		 this.previousConnectionTypes = await this.loadData();
+		this.addSettingTab(new ConnectionSettingTab(this.app, this));
+		this.settings = await this.loadData();
 
 		this.addCommand({
 			id: 'add-connection',
@@ -29,7 +41,7 @@ export default class ConnectionsPlugin extends Plugin {
 			callback: () => {
 				const currentFile = this.app.workspace.getActiveFile();
 				if (currentFile) {
-					new ConnectionModal(this, currentFile, this.previousConnectionTypes, (result: ConnectionData) => this.addConnection(result)).open()
+					new ConnectionModal(this, currentFile, this.settings.unmappedTypes, (result: ConnectionData) => this.addConnection(result)).open()
 				}
 			},
 		});
@@ -235,28 +247,53 @@ export default class ConnectionsPlugin extends Plugin {
 		}
 
 		// If the last connectionType we used isn't at the front of the list, move it there.
-		const index = this.previousConnectionTypes.indexOf(connectionType);
+		const index = this.settings.unmappedTypes.indexOf(connectionType);
 		if (index == 0) {
 			return;
 		} else if (index > 0) {	
-    		this.previousConnectionTypes.splice(index, 1);
+    		this.settings.unmappedTypes.splice(index, 1);
 		}
-		this.previousConnectionTypes.unshift(connectionType)
-		await this.saveData(this.previousConnectionTypes);
+		this.settings.unmappedTypes.unshift(connectionType)
+		await this.saveData(this.settings);
 	}
 
 	/**
-	 * Removes a connection type from the list of previous connection types
+	 * Removes a connection type from the list of unmapped connection types
 	 * @param {string} connectionType - The connection type to remove.
 	 */
 	async removeConnectionType(connectionType: string) {
-		const index = this.previousConnectionTypes.indexOf(connectionType);
+		const index = this.settings.unmappedTypes.indexOf(connectionType);
   		if (index > -1) {
-    		this.previousConnectionTypes.splice(index, 1);
-			await this.saveData(this.previousConnectionTypes);
+    		this.settings.unmappedTypes.splice(index, 1);
+			await this.saveData(this.settings);
 	  	}
 	}
 
+	async addMappedConnectionType(mapProperty: string, mapConnectionType: string) {
+			let index = this.findMappedConnectionType(mapProperty, mapConnectionType);
+			if (index == -1) {
+				this.settings.mappedTypes.push({mapProperty: mapProperty, mapConnectionType: mapConnectionType});
+				await this.saveData(this.settings);
+			}
+	}
+
+	async removeMappedConnectionType(mapProperty: string, mapConnectionType: string) {
+			let index = this.findMappedConnectionType(mapProperty, mapConnectionType);
+			if (index != -1) {
+				this.settings.mappedTypes.splice(index, 1);
+				await this.saveData(this.settings);
+			}
+	}
+
+	findMappedConnectionType (mapProperty: string, mapConnectionType: string) {
+		for (let index = 0; index < this.settings.mappedTypes.length; index++ ) {
+			let mappedType = this.settings.mappedTypes[index];
+			if (mappedType.mapProperty == mapProperty && mappedType.mapConnectionType == mapConnectionType) {
+				return index;
+			}
+		}
+		return -1;
+	}
 
 	/**
 	 * Removes a connection between files

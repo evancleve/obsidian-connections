@@ -7,15 +7,15 @@ export class ConnectionModal extends Modal {
   public fromFile: TFile;
   public toFile: TFile;
   public connectionType: string;
-  public previousConnectionTypes: Array<string>;
+  public unmappedConnectionTypes: Array<string>;
   private settings: Array<FocusableSetting>;
   
 
-  constructor(cp: ConnectionsPlugin, currentFile: TFile, previousConnectionTypes: Array<string>, onSubmit: (result: ConnectionData) => void) {
+  constructor(cp: ConnectionsPlugin, currentFile: TFile, unmappedConnectionTypes: Array<string>, onSubmit: (result: ConnectionData) => void) {
     super(cp.app);
     this.cp = cp;
     this.fromFile = currentFile;
-    this.previousConnectionTypes = previousConnectionTypes;
+    this.unmappedConnectionTypes = unmappedConnectionTypes;
     this.settings = [];
     this.contentEl.addEventListener('identifySettingEvent', (evt: CustomEvent) => this.focusOnNextSetting(evt));
     this.contentEl.addEventListener('removeConnectionType', (evt: CustomEvent) => this.removeConnectionType(evt));
@@ -111,7 +111,7 @@ export class ConnectionTypeSuggestInput extends AbstractInputSuggest<string> {
   }
 
   getSuggestions(query: string): string[] {
-    return this.cm.previousConnectionTypes.filter((connectionType) => connectionType.includes(query));
+    return this.cm.unmappedConnectionTypes.filter((connectionType) => connectionType.includes(query));
   }
 
   renderSuggestion(connectionType: string, el: HTMLElement) {
