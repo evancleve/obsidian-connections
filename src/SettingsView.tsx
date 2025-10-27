@@ -49,13 +49,14 @@ class MappedConnectionsTable extends Component<SettingsIface, ConnectionsSetting
           </Mui.TableRow>
         </Mui.TableHead>
         <Mui.TableBody>
-          <AddMappedConnectionType />
+          <AddMappedConnectionForm actionFunc={this.addMappedType.bind(this)} />
           {this.state.mappedTypes.map((mappedType: MappedType) => (
             <Mui.TableRow
               key={mappedType.mapProperty}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <Mui.TableCell component="th" scope="row" >
+                {/* TODO: replace with CSS  */}
                 <span style={{ marginLeft: '0.5em' }}>{mappedType.mapProperty}</span>
               </Mui.TableCell>
               <Mui.TableCell><span style={{ marginLeft: '0.5em' }}>{mappedType.mapConnectionType}</span></Mui.TableCell>
@@ -79,40 +80,72 @@ class MappedConnectionsTable extends Component<SettingsIface, ConnectionsSetting
   }
 
   addMappedType(mappedType: MappedType) {
-    console.log('Add got called with: ', mappedType);
+    this.setState({ mappedTypes: this.state.mappedTypes.concat(mappedType) })
+    this.addMappedFunc(mappedType);
   }
 }
 
-interface ExistingButtonIface {
+class AddMappedConnectionForm extends Component<AddButtonInterface, MappedType> {
+  actionFunc: (mt: MappedType) => void;
+
+  constructor(props: AddButtonInterface) {
+    super(props);
+    this.actionFunc = props.actionFunc;
+    this.state = { mapConnectionType: '', mapProperty: '' };
+  }
+
+  handlePropertyChange(evt: React.ChangeEvent<HTMLInputElement>) {
+    this.setState({ mapProperty: evt.target.value })
+  }
+
+  handleTypeChange(evt: React.ChangeEvent<HTMLInputElement>) {
+    this.setState({ mapConnectionType: evt.target.value })
+  }
+
+  handleAddButtonClick() {
+    // TODO: add validation and clearing of inputs after add
+    this.actionFunc({ mapProperty: this.state.mapProperty, mapConnectionType: this.state.mapConnectionType });
+  }
+
+  render() {
+    return <>
+      <Mui.TableRow>
+        <Mui.TableCell>
+          <Mui.Input id="input-mapProperty"
+            placeholder="Property"
+            size="small"
+            onChange={this.handlePropertyChange.bind(this)} />
+        </Mui.TableCell>
+        <Mui.TableCell>
+          <Mui.Input id="input-mapConnectionType"
+            placeholder="Connection Type"
+            size="small"
+            onChange={this.handleTypeChange.bind(this)} />
+        </Mui.TableCell>
+        <Mui.TableCell>
+          <Mui.Switch />
+        </Mui.TableCell>
+        <Mui.TableCell align="center">
+          <AddButton actionFunc={() => { this.handleAddButtonClick() }} />
+        </Mui.TableCell>
+      </Mui.TableRow>
+    </>
+  }
+}
+
+interface AddButtonInterface {
+  actionFunc: (mappedType: MappedType) => void;
+}
+
+const AddButton = (props: { actionFunc: () => void }) => {
+  return <Mui.Button size="small" onClick={() => { props.actionFunc() }}><Icons.Add /></Mui.Button>
+}
+
+interface DeleteButtonIface {
   actionFunc: (mappedType: MappedType) => void;
   mappedType: MappedType;
 }
 
-interface NewButtonIface {
-  actionFunc: (mappedType: MappedType) => void;
-}
-
-const DeleteButton = (props: ExistingButtonIface) => {
+const DeleteButton = (props: DeleteButtonIface) => {
   return <Mui.Button size="small" onClick={() => { props.actionFunc(props.mappedType) }}><Icons.Delete /></Mui.Button>
 }
-
-const AddMappedConnectionType = () => {
-  return <Mui.TableRow>
-    <Mui.TableCell>
-      <Mui.Input id="input-mapProperty"
-        placeholder="Property"
-        size="small" />
-    </Mui.TableCell>
-    <Mui.TableCell>
-      <Mui.Input id="input-mapConnectionType"
-        placeholder="Connection Type"
-        size="small" />
-    </Mui.TableCell>
-    <Mui.TableCell>
-      <Mui.Switch />
-    </Mui.TableCell>
-    <Mui.TableCell align="center">
-      <Mui.Button color="primary" ><Icons.Add /></Mui.Button>
-    </Mui.TableCell>
-  </Mui.TableRow>
-};
