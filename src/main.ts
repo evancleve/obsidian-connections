@@ -1,4 +1,4 @@
-import { Plugin, TFile} from 'obsidian';
+import { Plugin, TFile } from 'obsidian';
 import { ConnectionsModal } from './connection_modal';
 import { ConnectionsSettingTab } from './settings_tab'
 import { createLink } from "./utils/links";
@@ -12,7 +12,8 @@ export class ConnectionData {
 		this.fromFile = ff;
 		this.toFile = tf;
 		this.connectionType = ct;
-}}
+	}
+}
 
 export interface MappedType {
 	mapProperty: string,
@@ -25,12 +26,12 @@ export interface ConnectionsSettings {
 }
 
 export default class ConnectionsPlugin extends Plugin {
-	
-	footerTextElement : HTMLElement;
+
+	footerTextElement: HTMLElement;
 	settings: ConnectionsSettings;
 
 	async onload(): Promise<void> {
-		
+
 		this.addSettingTab(new ConnectionsSettingTab(this));
 		this.settings = await this.loadData();
 
@@ -59,7 +60,8 @@ export default class ConnectionsPlugin extends Plugin {
 	async onunload(): Promise<void> {
 		if (this.footerTextElement) {
 			this.footerTextElement.remove();
-	}}
+		}
+	}
 
 	/**
 	 * Refreshes the content of the Connections footer.
@@ -76,7 +78,9 @@ export default class ConnectionsPlugin extends Plugin {
 			if (file) {
 				this.footerTextElement.appendChild(await this.getForwardConnections(file));
 				this.footerTextElement.appendChild(await this.getBackwardConnections(file));
-	}}}
+			}
+		}
+	}
 
 	/**
 	 * Finds and returns connections embedded in the current note's frontmatter
@@ -96,31 +100,39 @@ export default class ConnectionsPlugin extends Plugin {
 
 	getUnmappedForwardConnections(file: TFile, metadata: Record<string, any>, forwardConnections: HTMLElement) {
 		let unmappedConnections = metadata['connections']
-			if (unmappedConnections) {
-				for (let connection of unmappedConnections) {
-					let connectionType = connection['connectionType'];
-					let strippedLink = this.stripLink(connection['link']);
-					let linkedFile = this.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
-					if (linkedFile) {
-						let connectionLine = this.createConnectionLine(new ConnectionData(file, linkedFile, connectionType));
-						if (connectionLine) {
-							forwardConnections.appendChild(connectionLine);
+		if (unmappedConnections) {
+			for (let connection of unmappedConnections) {
+				let connectionType = connection['connectionType'];
+				let strippedLink = this.stripLink(connection['link']);
+				let linkedFile = this.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
+				if (linkedFile) {
+					let connectionLine = this.createConnectionLine(new ConnectionData(file, linkedFile, connectionType));
+					if (connectionLine) {
+						forwardConnections.appendChild(connectionLine);
 
-	}}}}}
+					}
+				}
+			}
+		}
+	}
 
 	getMappedForwardConnections(file: TFile, metadata: Record<string, any>, forwardConnections: HTMLElement) {
 		for (let mappedType of this.settings.mappedTypes) {
 			if (metadata[mappedType.mapProperty]) {
-					let propertyValue = metadata[mappedType.mapProperty];
-					let connectionType = mappedType.mapConnectionType;
-					let strippedLink = this.stripLink(propertyValue);
-					let linkedFile = this.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
-					if (linkedFile) {
-						let connectionLine = this.createConnectionLine(new ConnectionData(file, linkedFile, connectionType));
-						if (connectionLine) {
-							forwardConnections.appendChild(connectionLine);
+				let propertyValue = metadata[mappedType.mapProperty];
+				let connectionType = mappedType.mapConnectionType;
+				let strippedLink = this.stripLink(propertyValue);
+				let linkedFile = this.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
+				if (linkedFile) {
+					let connectionLine = this.createConnectionLine(new ConnectionData(file, linkedFile, connectionType));
+					if (connectionLine) {
+						forwardConnections.appendChild(connectionLine);
 
-	}}}}}
+					}
+				}
+			}
+		}
+	}
 
 
 	/**
@@ -138,7 +150,9 @@ export default class ConnectionsPlugin extends Plugin {
 			for (let bLink of bLinksFiles.get(bLinkFile)) {
 				if (bLink['key'] && bLink['key'].includes('connections')) {
 					bFoundConnectionsFiles.add(bLinkFile);
-		}}}
+				}
+			}
+		}
 		for (let bLinkFileName of bFoundConnectionsFiles) {
 			let bLinkFile = this.app.metadataCache.getFirstLinkpathDest(bLinkFileName, '');
 			if (bLinkFile) {
@@ -154,11 +168,17 @@ export default class ConnectionsPlugin extends Plugin {
 								let connectionLine = this.createConnectionLine(new ConnectionData(bLinkFile, file, connectionType), false);
 								if (connectionLine) {
 									backwardConnections.appendChild(connectionLine);
-			
-		}}}}}}}
+
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		return backwardConnections;
 	}
-	
+
 	/**
 	 * Create HTML elements describing the connection.
 	 * @param {ConnectionData} cData - A  object describing the connection.
@@ -181,12 +201,12 @@ export default class ConnectionsPlugin extends Plugin {
 			fromFileText = createLink(this.app, fromFile);
 			fromSpan.append(fromFileText);
 		}
-		
+
 		let connectionTypeSpan = document.createElement('span');
 		connectionTypeSpan.addClass('connection-type');
 		connectionTypeSpan.textContent = ' ' + connectionType + ' '
 		connectionLine.append(connectionTypeSpan);
-		
+
 		let toSpan = document.createElement('span');
 		toSpan.addClass('connection-name');
 		connectionLine.append(toSpan);
@@ -207,7 +227,7 @@ export default class ConnectionsPlugin extends Plugin {
 			let clickedBtn = ev.currentTarget;
 			if (clickedBtn && clickedBtn instanceof HTMLButtonElement) {
 				let sourceFile, linkedFile;
-				let {fromFile, toFile, connectionType} = clickedBtn.dataset
+				let { fromFile, toFile, connectionType } = clickedBtn.dataset
 				let forward = (clickedBtn.dataset.forward === 'true');
 				if (fromFile === undefined || toFile === undefined || connectionType === undefined) {
 					console.error('Missing parameters required to remove connection!');
@@ -220,9 +240,11 @@ export default class ConnectionsPlugin extends Plugin {
 					sourceFile = this.app.vault.getFileByPath(toFile);
 					linkedFile = this.app.vault.getFileByPath(fromFile);
 				}
-				if (sourceFile instanceof TFile && linkedFile instanceof TFile ) {
+				if (sourceFile instanceof TFile && linkedFile instanceof TFile) {
 					this.removeConnection(new ConnectionData(sourceFile, linkedFile, connectionType));
-		}}});
+				}
+			}
+		});
 		connectionLine.createEl('br');
 		return connectionLine;
 	}
@@ -259,8 +281,8 @@ export default class ConnectionsPlugin extends Plugin {
 		const index = this.settings.unmappedTypes.indexOf(connectionType);
 		if (index == 0) {
 			return;
-		} else if (index > 0) {	
-    		this.settings.unmappedTypes.splice(index, 1);
+		} else if (index > 0) {
+			this.settings.unmappedTypes.splice(index, 1);
 		}
 		this.settings.unmappedTypes.unshift(connectionType)
 		await this.saveData(this.settings);
@@ -272,28 +294,30 @@ export default class ConnectionsPlugin extends Plugin {
 	 */
 	async removeConnectionType(connectionType: string) {
 		const index = this.settings.unmappedTypes.indexOf(connectionType);
-  		if (index > -1) {
-    		this.settings.unmappedTypes.splice(index, 1);
+		if (index > -1) {
+			this.settings.unmappedTypes.splice(index, 1);
 			await this.saveData(this.settings);
-	  	}
+		}
 	}
 
 	async addMappedConnectionType(mapProperty: string, mapConnectionType: string) {
-			let index = this.findMappedConnectionType(mapProperty, mapConnectionType);
-			if (index == -1) {
-				this.settings.mappedTypes.push({mapProperty: mapProperty, mapConnectionType: mapConnectionType});
-				await this.saveData(this.settings);
-	}}
+		let index = this.findMappedConnectionType(mapProperty, mapConnectionType);
+		if (index == -1) {
+			this.settings.mappedTypes.push({ mapProperty: mapProperty, mapConnectionType: mapConnectionType });
+			await this.saveData(this.settings);
+		}
+	}
 
 	async removeMappedConnectionType(mapProperty: string, mapConnectionType: string) {
-			let index = this.findMappedConnectionType(mapProperty, mapConnectionType);
-			if (index != -1) {
-				this.settings.mappedTypes.splice(index, 1);
-				await this.saveData(this.settings);
-	}}
+		let index = this.findMappedConnectionType(mapProperty, mapConnectionType);
+		if (index != -1) {
+			this.settings.mappedTypes.splice(index, 1);
+			await this.saveData(this.settings);
+		}
+	}
 
-	findMappedConnectionType (mapProperty: string, mapConnectionType: string) {
-		for (let index = 0; index < this.settings.mappedTypes.length; index++ ) {
+	findMappedConnectionType(mapProperty: string, mapConnectionType: string) {
+		for (let index = 0; index < this.settings.mappedTypes.length; index++) {
 			let mappedType = this.settings.mappedTypes[index];
 			if (mappedType.mapProperty == mapProperty && mappedType.mapConnectionType == mapConnectionType) {
 				return index;
@@ -337,5 +361,6 @@ export default class ConnectionsPlugin extends Plugin {
 			return linkResults[1];
 		} else {
 			return link;
-	}}
+		}
+	}
 }
