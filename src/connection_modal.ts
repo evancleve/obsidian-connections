@@ -2,7 +2,7 @@ import { AbstractInputSuggest, Modal, Setting, TFile, SearchComponent, ButtonCom
 import type ConnectionsPlugin from 'src/main';
 import {ConnectionData} from 'src/main';
 
-export class ConnectionModal extends Modal {
+export class ConnectionsModal extends Modal {
   private cp: ConnectionsPlugin;
   public fromFile: TFile;
   public toFile: TFile;
@@ -68,11 +68,11 @@ export class ConnectionModal extends Modal {
 
 export class NoteSuggestInput extends AbstractInputSuggest<TFile> {
   private availableFiles: Array<TFile>;
-  private cm: ConnectionModal;
+  private cm: ConnectionsModal;
   private inputEl: HTMLInputElement;
   private folderNoteRegexp = new RegExp('(?<foldername>[^\\\\]+?)\\/\\k<foldername>\\.(?i:md)');
 
-  constructor(cp: ConnectionsPlugin, cm: ConnectionModal, inputEl: HTMLInputElement) {
+  constructor(cp: ConnectionsPlugin, cm: ConnectionsModal, inputEl: HTMLInputElement) {
     super(cp.app, inputEl);
     this.cm = cm;
     this.inputEl = inputEl;
@@ -101,10 +101,10 @@ export class NoteSuggestInput extends AbstractInputSuggest<TFile> {
 }
 
 export class ConnectionTypeSuggestInput extends AbstractInputSuggest<string> {
-  private cm: ConnectionModal;
+  private cm: ConnectionsModal;
   private inputEl: HTMLInputElement;
 
-  constructor(cp: ConnectionsPlugin, cm: ConnectionModal, inputEl: HTMLInputElement) {
+  constructor(cp: ConnectionsPlugin, cm: ConnectionsModal, inputEl: HTMLInputElement) {
     super(cp.app, inputEl);
     this.cm = cm;
     this.inputEl = inputEl;

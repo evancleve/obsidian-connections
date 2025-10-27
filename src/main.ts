@@ -1,8 +1,8 @@
-import { CachedMetadata, Plugin, TFile} from 'obsidian';
-import { ConnectionModal } from './connection_modal';
-import { ConnectionSettingTab } from './settings'
-import { createLink } from "../utils/links";
- 
+import { Plugin, TFile} from 'obsidian';
+import { ConnectionsModal } from './connection_modal';
+import { ConnectionsSettingTab } from './settings_tab'
+import { createLink } from "./utils/links";
+
 export class ConnectionData {
 	fromFile: TFile;
 	toFile: TFile;
@@ -14,24 +14,24 @@ export class ConnectionData {
 		this.connectionType = ct;
 }}
 
-interface MappedType {
+export interface MappedType {
 	mapProperty: string,
 	mapConnectionType: string
 }
 
-interface ConnectionSettings {
-	unmappedTypes: Array<string>;
+export interface ConnectionsSettings {
 	mappedTypes: Array<MappedType>;
+	unmappedTypes: Array<string>;
 }
 
 export default class ConnectionsPlugin extends Plugin {
 	
 	footerTextElement : HTMLElement;
-	settings: ConnectionSettings;
+	settings: ConnectionsSettings;
 
 	async onload(): Promise<void> {
 		
-		this.addSettingTab(new ConnectionSettingTab(this.app, this));
+		this.addSettingTab(new ConnectionsSettingTab(this));
 		this.settings = await this.loadData();
 
 		this.addCommand({
@@ -40,7 +40,7 @@ export default class ConnectionsPlugin extends Plugin {
 			callback: () => {
 				const currentFile = this.app.workspace.getActiveFile();
 				if (currentFile) {
-					new ConnectionModal(this, currentFile, this.settings.unmappedTypes, (result: ConnectionData) => this.addConnection(result)).open()
+					new ConnectionsModal(this, currentFile, this.settings.unmappedTypes, (result: ConnectionData) => this.addConnection(result)).open()
 				}
 			},
 		});

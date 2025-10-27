@@ -6,6 +6,7 @@
     "module": "ESNext",
     "target": "ES6",
     "allowJs": true,
+    "jsx": "react-jsx",
     "noImplicitAny": true,
     "moduleResolution": "node",
     "importHelpers": true,
@@ -15,10 +16,12 @@
       "DOM",
       "ES5",
       "ES6",
-      "ES7"
+      "ES7",
+      "ES2023"
     ]
   },
   "include": [
-    "**/*.ts"
+    "**/*.ts",
+    "src/settings_tab*.tsx"  
   ]
 }

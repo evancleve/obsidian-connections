@@ -35,3 +35,7 @@
 .connections-internal-link {
   cursor: pointer;
 }
+
+/* .connections-settings-revert {
+  all: initial;
+} */

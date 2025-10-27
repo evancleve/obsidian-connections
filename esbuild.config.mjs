@@ -39,6 +39,10 @@ const context = await esbuild.context({
 	treeShaking: true,
 	outfile: "main.js",
 	minify: prod,
+	loader: { 
+		".woff2": "binary", 
+		".woff": "binary"
+	},
 });
 
 if (prod) {
