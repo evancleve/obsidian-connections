@@ -15,6 +15,7 @@ export class ConnectionData {
 	}
 }
 
+export type UnmappedType = string;
 export interface MappedType {
 	mapProperty: string,
 	mapConnectionType: string
@@ -22,7 +23,7 @@ export interface MappedType {
 
 export interface ConnectionsSettings {
 	mappedTypes: Array<MappedType>;
-	unmappedTypes: Array<string>;
+	unmappedTypes: Array<UnmappedType>;
 }
 
 export default class ConnectionsPlugin extends Plugin {
@@ -289,10 +290,22 @@ export default class ConnectionsPlugin extends Plugin {
 	}
 
 	/**
+	 * Adds a connection type to the list of unmapped connection types
+	 * @param {string} connectionType - The connection type to add.
+	 */
+	async addConnectionType(connectionType: UnmappedType) {
+		const index = this.settings.unmappedTypes.indexOf(connectionType);
+		if (index == -1) {
+			this.settings.unmappedTypes.push(connectionType);
+			await this.saveData(this.settings);
+		}
+	}
+
+	/**
 	 * Removes a connection type from the list of unmapped connection types
 	 * @param {string} connectionType - The connection type to remove.
 	 */
-	async removeConnectionType(connectionType: string) {
+	async removeConnectionType(connectionType: UnmappedType) {
 		const index = this.settings.unmappedTypes.indexOf(connectionType);
 		if (index > -1) {
 			this.settings.unmappedTypes.splice(index, 1);

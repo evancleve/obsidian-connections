@@ -23,13 +23,13 @@
   float: inline-start;
   margin-inline-end: 1em;
   margin-top: 0.25em;
-  
+
 }
 
 .same-document {
-    text-decoration:underline;
-    text-decoration-style: dashed;
-    text-underline-offset: 2px;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 2px;
 }
 
 .connections-internal-link {
@@ -39,3 +39,31 @@
 /* .connections-settings-revert {
   all: initial;
 } */
+
+.connections-table-content {
+  margin-left: '0.5em'
+}
+
+.unmapped-connections-table {
+  margin-top: 3em;
+}
+
+.section-divider {
+  border: none;
+  border-top: 3px double;
+  overflow: visible;
+  text-align: center;
+  height: 5px;
+  width: 75%;
+  margin: auto;
+  margin-top: 3em;
+}
+
+.section-divider::after {
+  background: white;
+  content: "§";
+  font-size: 120%;
+  padding: 0 4px;
+  position: relative;
+  top: -13px;
+}
