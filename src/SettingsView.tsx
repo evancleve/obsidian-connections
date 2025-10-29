@@ -1,12 +1,23 @@
-import { ConnectionsSettings, UnmappedType, MappedType } from './main';
-import * as Mui from '@mui/material';
-import * as Icons from '@mui/icons-material';
+import { ConnectionsSettings, UnmappedType, MappedType, MappedConnectionDirection } from './main';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import TextField from '@mui/material/TextField';
+import Add from '@mui/icons-material/Add';
+import Delete from '@mui/icons-material/Delete';
+
 import { Component } from 'react';
 
 export interface SettingsIface {
   settings: ConnectionsSettings;
   deleteFunc: (connectionType: MappedType | UnmappedType) => void;
-  addFunc: (connectionType: MappedType | UnmappedType) => void;
+  addFunc: (connectionType: MappedType | UnmappedType) => Promise<boolean>;
 }
 
 export class SettingsView extends Component<SettingsIface> {
@@ -16,13 +27,13 @@ export class SettingsView extends Component<SettingsIface> {
 
   render() {
     return <>
-      <Mui.Box component="section">
+      <Box component="section">
         <MappedConnectionsTable {...this.props} />
-      </Mui.Box>
+      </Box>
       <hr className="section-divider" />
-      <Mui.Box component="section" className="unmapped-connections-table">
+      <Box component="section" className="unmapped-connections-table">
         <UnmappedConnectionsTable {...this.props} />
-      </Mui.Box>
+      </Box>
     </>
   }
 }
@@ -33,7 +44,7 @@ type MappedConnectionTableState = {
 
 class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTableState> {
   deleteFunc: (connectionType: MappedType) => void;
-  addFunc: (mappedType: MappedType) => void;
+  addFunc: (mappedType: MappedType) => Promise<boolean>;
 
   constructor(props: SettingsIface) {
     super(props);
@@ -48,34 +59,34 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
 
     return <>
       <h3>Mapped Connection Types</h3>
-      <Mui.Table size="small">
-        <Mui.TableHead>
-          <Mui.TableRow>
-            <Mui.TableCell>Connection Type</Mui.TableCell>
-            <Mui.TableCell>Property</Mui.TableCell>
-            <Mui.TableCell>Direction</Mui.TableCell>
-            <Mui.TableCell>Controls</Mui.TableCell>
-          </Mui.TableRow>
-        </Mui.TableHead>
-        <Mui.TableBody>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell><span className="connections-settings-table-header">Connection Type</span></TableCell>
+            <TableCell><span className="connections-settings-table-header">Frontmatter Property</span></TableCell>
+            <TableCell><span className="connections-settings-table-header">Direction</span></TableCell>
+            <TableCell><span className="connections-settings-table-header">Controls</span></TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           <AddMappedConnectionForm actionFunc={this.addMappedType.bind(this)} />
           {this.state.mappedTypes.map((mappedType: MappedType) => (
-            <Mui.TableRow
+            <TableRow
               key={mappedType.mapProperty}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
-              <Mui.TableCell component="th" scope="row" >
+              <TableCell component="th" scope="row" >
                 <span className="connections-table-content">{mappedType.mapConnectionType}</span>
-              </Mui.TableCell>
-              <Mui.TableCell><span className="connections-table-content">{mappedType.mapProperty}</span></Mui.TableCell>
-              <Mui.TableCell align="center">{'true'}</Mui.TableCell>
-              <Mui.TableCell align="right">
+              </TableCell>
+              <TableCell><span className="connections-table-content">{mappedType.mapProperty}</span></TableCell>
+              <TableCell align="left"><span className="connections-table-content">{mappedType.mapConnectionDirection}</span></TableCell>
+              <TableCell align="right">
                 <DeleteButton actionFunc={(arg: MappedType) => { this.deleteMappedType(arg) }} connectionType={mappedType} />
-              </Mui.TableCell>
-            </Mui.TableRow>
+              </TableCell>
+            </TableRow>
           ))}
-        </Mui.TableBody>
-      </Mui.Table>
+        </TableBody>
+      </Table>
     </>
   }
 
@@ -87,56 +98,114 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
     this.deleteFunc(mappedType);
   }
 
-  addMappedType(mappedType: MappedType) {
-    this.setState({ mappedTypes: this.state.mappedTypes.concat(mappedType) })
-    this.addFunc(mappedType);
+  async addMappedType(mappedType: MappedType): Promise<boolean> {
+    let result = await this.addFunc(mappedType);
+    if (result) {
+      this.setState({})
+    }
+    return result;
   }
 }
 
-class AddMappedConnectionForm extends Component<AddButtonInterface, MappedType> {
-  actionFunc: (mt: MappedType) => void;
+type MappedTypeFormState = {
+  mapConnectionType: string,
+  mapProperty: string,
+  mapConnectionDirection: MappedConnectionDirection,
+  errors: { mapProperty: string, mapConnectionType: string }
+}
+
+class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFormState> {
+  actionFunc: (mt: MappedType) => Promise<boolean>;
 
   constructor(props: AddButtonInterface) {
     super(props);
     this.actionFunc = props.actionFunc;
-    this.state = { mapConnectionType: '', mapProperty: '' };
+    this.state = {
+      mapConnectionType: '',
+      mapProperty: '',
+      mapConnectionDirection: MappedConnectionDirection.Forward,
+      errors: { mapProperty: '', mapConnectionType: '' }
+    };
   }
 
   handlePropertyChange(evt: React.ChangeEvent<HTMLInputElement>) {
-    this.setState({ mapProperty: evt.target.value })
+    this.setState({ mapProperty: evt.target.value });
   }
 
   handleTypeChange(evt: React.ChangeEvent<HTMLInputElement>) {
-    this.setState({ mapConnectionType: evt.target.value })
+    this.setState({ mapConnectionType: evt.target.value });
   }
 
-  handleAddButtonClick() {
-    // TODO: add validation and clearing of inputs after add
-    this.actionFunc({ mapProperty: this.state.mapProperty, mapConnectionType: this.state.mapConnectionType });
+  handleDirectionChange(evt: React.ChangeEvent<HTMLInputElement>) {
+    this.setState({ mapConnectionDirection: evt.target.value as MappedConnectionDirection });
+  }
+
+  async handleAddButtonClick() {
+    if (this.state.mapConnectionType.length < 1) {
+      let newErrors = Object.assign({}, this.state.errors);
+      newErrors.mapConnectionType = 'Connection type can\'t be blank!';
+      this.setState({ errors: newErrors });
+      return
+    }
+    if (this.state.mapProperty.length < 1) {
+      let newErrors = Object.assign({}, this.state.errors);
+      newErrors.mapProperty = 'Property name can\'t be blank!';
+      this.setState({ errors: newErrors });
+      return
+    }
+    if (this.state.mapProperty.includes(':')) {
+      let newErrors = Object.assign({}, this.state.errors);
+      newErrors.mapProperty = 'Property name can\'t contain a colon!';
+      this.setState({ errors: newErrors });
+      return
+    }
+    let result = await this.actionFunc({ mapProperty: this.state.mapProperty, mapConnectionType: this.state.mapConnectionType, mapConnectionDirection: this.state.mapConnectionDirection });
+    if (result) {
+      this.setState({ mapProperty: '', mapConnectionType: '', errors: { mapProperty: '', mapConnectionType: '' } });
+    } else {
+      let newErrors = Object.assign({}, this.state.errors);
+      newErrors.mapProperty = 'Unable to create duplicate mapping property!';
+      this.setState({ errors: newErrors });
+      return
+    }
   }
 
   render() {
     return <>
-      <Mui.TableRow>
-        <Mui.TableCell>
-          <Mui.Input id="input-mapConnectionType"
+      <TableRow>
+        <TableCell>
+          <TextField id="input-mapConnectionType"
             placeholder="Connection Type"
+            error={this.state.errors.mapConnectionType.length > 0}
+            helperText={this.state.errors.mapConnectionType}
             size="small"
+            value={this.state.mapConnectionType}
             onChange={this.handleTypeChange.bind(this)} />
-        </Mui.TableCell>
-        <Mui.TableCell>
-          <Mui.Input id="input-mapProperty"
+        </TableCell>
+        <TableCell>
+          <TextField id="input-mapProperty"
+            error={this.state.errors.mapProperty.length > 0}
+            helperText={this.state.errors.mapProperty}
             placeholder="Property"
             size="small"
+            value={this.state.mapProperty}
             onChange={this.handlePropertyChange.bind(this)} />
-        </Mui.TableCell>
-        <Mui.TableCell>
-          <Mui.Switch />
-        </Mui.TableCell>
-        <Mui.TableCell align="right">
+        </TableCell>
+        <TableCell>
+          <Select
+            id="input-mapDirection"
+            size="small"
+            autoWidth={true}
+            value={this.state.mapConnectionDirection}
+            onChange={this.handleDirectionChange.bind(this)}>
+            <MenuItem value={MappedConnectionDirection.Forward}>{MappedConnectionDirection.Forward}</MenuItem>
+            <MenuItem value={MappedConnectionDirection.Backward}>{MappedConnectionDirection.Backward}</MenuItem>
+          </Select>
+        </TableCell>
+        <TableCell align="right">
           <AddButton actionFunc={() => { this.handleAddButtonClick() }} />
-        </Mui.TableCell>
-      </Mui.TableRow>
+        </TableCell>
+      </TableRow>
     </>
   }
 }
@@ -147,7 +216,7 @@ type UnmappedConnectionTableState = {
 
 class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnectionTableState> {
   deleteFunc: (unmappedConnectionType: UnmappedType) => void;
-  addFunc: (unmappedConnectionType: UnmappedType) => void;
+  addFunc: (unmappedConnectionType: UnmappedType) => Promise<boolean>;
 
   constructor(props: SettingsIface) {
     super(props);
@@ -160,95 +229,107 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
 
     return <>
       <h3>Unmapped Connection Types</h3>
-      <Mui.Table size="small">
-        <Mui.TableHead>
-          <Mui.TableRow>
-            <Mui.TableCell>Connection Type</Mui.TableCell>
-            <Mui.TableCell>Controls</Mui.TableCell>
-          </Mui.TableRow>
-        </Mui.TableHead>
-        <Mui.TableBody>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell><span className="connections-settings-table-header">Connection Type</span></TableCell>
+            <TableCell><span className="connections-settings-table-header">Controls</span></TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           <AddUnmappedConnectionForm actionFunc={this.addUnmappedType.bind(this)} />
           {this.state.unmappedTypes.map((unmappedConnectionType: UnmappedType) => (
-            <Mui.TableRow
+            <TableRow
               key={unmappedConnectionType}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
-              <Mui.TableCell component="th" scope="row" >
+              <TableCell component="th" scope="row" >
                 <span style={{ marginLeft: '0.5em' }}>{unmappedConnectionType}</span>
-              </Mui.TableCell>
-              <Mui.TableCell align="right">
+              </TableCell>
+              <TableCell align="right">
                 <DeleteButton actionFunc={(arg: UnmappedType) => { this.deleteUnmappedType(arg) }} connectionType={unmappedConnectionType} />
-              </Mui.TableCell>
-            </Mui.TableRow>
+              </TableCell>
+            </TableRow>
           ))}
-        </Mui.TableBody>
-      </Mui.Table>
+        </TableBody>
+      </Table>
     </>
   }
 
   deleteUnmappedType(unmappedConnectionType: UnmappedType) {
-    console.log('1 ', this.state);
     let idx = this.state.unmappedTypes.indexOf(unmappedConnectionType);
     if (idx != -1) {
       this.setState({ unmappedTypes: this.state.unmappedTypes.toSpliced(idx, 1) });
     }
-    console.log('2 ', this.state);
     this.deleteFunc(unmappedConnectionType);
-    console.log('3 ', this.state);
   }
 
-  addUnmappedType(unmappedConnectionType: UnmappedType) {
-    this.setState({ unmappedTypes: this.state.unmappedTypes.concat(unmappedConnectionType) })
-    this.addFunc(unmappedConnectionType);
+  async addUnmappedType(unmappedConnectionType: UnmappedType) {
+    let result = await this.addFunc(unmappedConnectionType);
+    if (result) {
+      this.setState({})
+    }
+    return result;
   }
 }
 
-type UnmappedTypeState = {
+type UnmappedTypeFormState = {
   unmappedType: UnmappedType
+  errors: { unmappedType: string }
 }
 
-class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTypeState> {
-  actionFunc: (ut: UnmappedType) => void;
+class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTypeFormState> {
+  actionFunc: (ut: UnmappedType) => Promise<boolean>;
 
   constructor(props: AddButtonInterface) {
     super(props);
     this.actionFunc = props.actionFunc;
-    this.state = { unmappedType: '' }
+    this.state = { unmappedType: '', errors: { unmappedType: '' } }
   }
 
   handleTypeChange(evt: React.ChangeEvent<HTMLInputElement>) {
     this.setState({ unmappedType: evt.target.value })
   }
 
-  handleAddButtonClick() {
-    // TODO: add validation and clearing of inputs after add
-    this.actionFunc(this.state.unmappedType);
+  async handleAddButtonClick() {
+    if (this.state.unmappedType.length < 1) {
+      this.setState({ errors: { unmappedType: 'Connection type can\'t be blank!' } });
+      return
+    }
+    let result = await this.actionFunc(this.state.unmappedType);
+    if (result) {
+      this.setState({ unmappedType: '', errors: { unmappedType: '' } });
+    } else {
+      this.setState({ errors: { unmappedType: 'Unable to create duplicate connection type' } });
+    }
   }
 
   render() {
     return <>
-      <Mui.TableRow>
-        <Mui.TableCell>
-          <Mui.Input id="input-mapConnectionType"
+      <TableRow>
+        <TableCell>
+          <TextField id="input-mapConnectionType"
+            error={this.state.errors.unmappedType.length > 0}
+            helperText={this.state.errors.unmappedType}
             placeholder="Connection Type"
             size="small"
+            value={this.state.unmappedType}
             onChange={this.handleTypeChange.bind(this)} />
-        </Mui.TableCell>
-        <Mui.TableCell align="right">
+        </TableCell>
+        <TableCell align="right">
           <AddButton actionFunc={() => { this.handleAddButtonClick() }} />
-        </Mui.TableCell>
-      </Mui.TableRow>
+        </TableCell>
+      </TableRow>
     </>
   }
 }
 
 interface AddButtonInterface {
-  actionFunc: (connectionType: MappedType | UnmappedType) => void;
+  actionFunc: (connectionType: MappedType | UnmappedType) => Promise<boolean>;
 }
 
 const AddButton = (props: { actionFunc: () => void }) => {
-  return <Mui.Button size="small" onClick={() => { props.actionFunc() }}><Icons.Add /></Mui.Button>
+  return <Button size="small" onClick={() => { props.actionFunc() }}><Add /></Button>
 }
 
 interface DeleteButtonIface {
@@ -257,5 +338,5 @@ interface DeleteButtonIface {
 }
 
 const DeleteButton = (props: DeleteButtonIface) => {
-  return <Mui.Button size="small" onClick={() => { props.actionFunc(props.connectionType) }}><Icons.Delete /></Mui.Button>
+  return <Button size="small" onClick={() => { props.actionFunc(props.connectionType) }}><Delete /></Button>
 }

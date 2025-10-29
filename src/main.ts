@@ -16,9 +16,16 @@ export class ConnectionData {
 }
 
 export type UnmappedType = string;
+
 export interface MappedType {
 	mapProperty: string,
-	mapConnectionType: string
+	mapConnectionType: string,
+	mapConnectionDirection: MappedConnectionDirection;
+}
+
+export enum MappedConnectionDirection {
+	Forward = "forward",
+	Backward = "backward"
 }
 
 export interface ConnectionsSettings {
@@ -293,12 +300,14 @@ export default class ConnectionsPlugin extends Plugin {
 	 * Adds a connection type to the list of unmapped connection types
 	 * @param {string} connectionType - The connection type to add.
 	 */
-	async addConnectionType(connectionType: UnmappedType) {
+	async addConnectionType(connectionType: UnmappedType): Promise<boolean> {
 		const index = this.settings.unmappedTypes.indexOf(connectionType);
 		if (index == -1) {
 			this.settings.unmappedTypes.push(connectionType);
 			await this.saveData(this.settings);
+			return true;
 		}
+		return false;
 	}
 
 	/**
@@ -313,26 +322,28 @@ export default class ConnectionsPlugin extends Plugin {
 		}
 	}
 
-	async addMappedConnectionType(mapProperty: string, mapConnectionType: string) {
-		let index = this.findMappedConnectionType(mapProperty, mapConnectionType);
+	async addMappedConnectionType(mapProperty: string, mapConnectionType: string, mapConnectionDirection: MappedConnectionDirection): Promise<boolean> {
+		let index = this.findMappedConnectionType(mapProperty);
 		if (index == -1) {
-			this.settings.mappedTypes.push({ mapProperty: mapProperty, mapConnectionType: mapConnectionType });
+			this.settings.mappedTypes.push({ mapProperty: mapProperty, mapConnectionType: mapConnectionType, mapConnectionDirection: mapConnectionDirection });
 			await this.saveData(this.settings);
+			return true;
 		}
+		return false;
 	}
 
-	async removeMappedConnectionType(mapProperty: string, mapConnectionType: string) {
-		let index = this.findMappedConnectionType(mapProperty, mapConnectionType);
+	async removeMappedConnectionType(mapProperty: string) {
+		let index = this.findMappedConnectionType(mapProperty);
 		if (index != -1) {
 			this.settings.mappedTypes.splice(index, 1);
 			await this.saveData(this.settings);
 		}
 	}
 
-	findMappedConnectionType(mapProperty: string, mapConnectionType: string) {
+	findMappedConnectionType(mapProperty: string) {
 		for (let index = 0; index < this.settings.mappedTypes.length; index++) {
 			let mappedType = this.settings.mappedTypes[index];
-			if (mappedType.mapProperty == mapProperty && mappedType.mapConnectionType == mapConnectionType) {
+			if (mappedType.mapProperty == mapProperty) {
 				return index;
 			}
 		}

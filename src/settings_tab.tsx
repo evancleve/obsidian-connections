@@ -22,17 +22,17 @@ export class ConnectionsSettingTab extends PluginSettingTab {
         this.plugin = plugin;
     }
 
-    async addType(typeToAdd: MappedType | UnmappedType) {
+    async addType(typeToAdd: MappedType | UnmappedType): Promise<boolean> {
         if (isMappedType(typeToAdd)) {
-            await this.plugin.addMappedConnectionType(typeToAdd.mapProperty, typeToAdd.mapConnectionType);
+            return await this.plugin.addMappedConnectionType(typeToAdd.mapProperty, typeToAdd.mapConnectionType, typeToAdd.mapConnectionDirection);
         } else {
-            await this.plugin.addConnectionType(typeToAdd);
+            return await this.plugin.addConnectionType(typeToAdd);
         }
     }
 
     async deleteType(typeToDelete: MappedType | UnmappedType) {
         if (isMappedType(typeToDelete)) {
-            await this.plugin.removeMappedConnectionType(typeToDelete.mapProperty, typeToDelete.mapConnectionType);
+            await this.plugin.removeMappedConnectionType(typeToDelete.mapProperty);
         } else {
             await this.plugin.removeConnectionType(typeToDelete);
         }

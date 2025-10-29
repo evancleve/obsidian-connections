@@ -40,8 +40,12 @@
   all: initial;
 } */
 
+#input-mapDirection {
+  min-width: 8ch;
+}
+
 .connections-table-content {
-  margin-left: '0.5em'
+  padding-left: 1em;
 }
 
 .unmapped-connections-table {
@@ -54,7 +58,7 @@
   overflow: visible;
   text-align: center;
   height: 5px;
-  width: 75%;
+  width: 85%;
   margin: auto;
   margin-top: 3em;
 }
@@ -66,4 +70,8 @@
   padding: 0 4px;
   position: relative;
   top: -13px;
+}
+
+.connections-settings-table-header {
+  font-weight: bold;
 }
