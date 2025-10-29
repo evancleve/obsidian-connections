@@ -15,23 +15,30 @@ export class ConnectionData {
 	}
 }
 
-export type UnmappedType = string;
+export type UnmappedConnectionType = {connectionType: string};
 
-export interface MappedType {
+export type MappedConnectionType = UnmappedConnectionType & {
 	mapProperty: string,
-	mapConnectionType: string,
-	mapConnectionDirection: MappedConnectionDirection;
-}
+	mapConnectionDirection: MappedConnectionDirection
+};
 
 export enum MappedConnectionDirection {
 	Left = "left",
 	Right = "right"
-}
+};
 
-export interface ConnectionsSettings {
-	mappedTypes: Array<MappedType>;
-	unmappedTypes: Array<UnmappedType>;
-}
+export type ConnectionBond = {
+	source: TFile,
+	target: TFile
+};
+
+export type MappedConnection = MappedConnectionType & ConnectionBond;
+export type UnmappedConnection = UnmappedConnectionType & ConnectionBond;
+
+export type ConnectionsSettings = {
+	unmappedTypes: Array<UnmappedConnectionType>;
+	mappedTypes: Array<MappedConnectionType>;	
+};
 
 export default class ConnectionsPlugin extends Plugin {
 
@@ -128,7 +135,7 @@ export default class ConnectionsPlugin extends Plugin {
 		for (let mappedType of this.settings.mappedTypes) {
 			if (metadata[mappedType.mapProperty]) {
 				let propertyValue = metadata[mappedType.mapProperty];
-				let connectionType = mappedType.mapConnectionType;
+				let connectionType = mappedType.connectionType;
 				let strippedLink = this.stripLink(propertyValue);
 				let linkedFile = this.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
 				if (linkedFile) {
@@ -286,13 +293,13 @@ export default class ConnectionsPlugin extends Plugin {
 		}
 
 		// If the last connectionType we used isn't at the front of the list, move it there.
-		const index = this.settings.unmappedTypes.indexOf(connectionType);
+		const index = this.findUnmappedConnectionType(connectionType);
 		if (index == 0) {
 			return;
 		} else if (index > 0) {
 			this.settings.unmappedTypes.splice(index, 1);
 		}
-		this.settings.unmappedTypes.unshift(connectionType)
+		this.settings.unmappedTypes.unshift({connectionType: connectionType})
 		await this.saveData(this.settings);
 	}
 
@@ -300,10 +307,10 @@ export default class ConnectionsPlugin extends Plugin {
 	 * Adds a connection type to the list of unmapped connection types
 	 * @param {string} connectionType - The connection type to add.
 	 */
-	async addConnectionType(connectionType: UnmappedType): Promise<boolean> {
-		const index = this.settings.unmappedTypes.indexOf(connectionType);
+	async addConnectionType(umt: UnmappedConnectionType): Promise<boolean> {
+		const index = this.findUnmappedConnectionType(umt.connectionType);
 		if (index == -1) {
-			this.settings.unmappedTypes.push(connectionType);
+			this.settings.unmappedTypes.push(umt);
 			await this.saveData(this.settings);
 			return true;
 		}
@@ -314,18 +321,18 @@ export default class ConnectionsPlugin extends Plugin {
 	 * Removes a connection type from the list of unmapped connection types
 	 * @param {string} connectionType - The connection type to remove.
 	 */
-	async removeConnectionType(connectionType: UnmappedType) {
-		const index = this.settings.unmappedTypes.indexOf(connectionType);
+	async removeConnectionType(umt: UnmappedConnectionType) {
+		const index = this.findUnmappedConnectionType(umt.connectionType);
 		if (index > -1) {
 			this.settings.unmappedTypes.splice(index, 1);
 			await this.saveData(this.settings);
 		}
 	}
 
-	async addMappedConnectionType(mapProperty: string, mapConnectionType: string, mapConnectionDirection: MappedConnectionDirection): Promise<boolean> {
+	async addMappedConnectionType(mapProperty: string, connectionType: string, mapConnectionDirection: MappedConnectionDirection): Promise<boolean> {
 		let index = this.findMappedConnectionType(mapProperty);
 		if (index == -1) {
-			this.settings.mappedTypes.push({ mapProperty: mapProperty, mapConnectionType: mapConnectionType, mapConnectionDirection: mapConnectionDirection });
+			this.settings.mappedTypes.push({ mapProperty: mapProperty, connectionType: connectionType, mapConnectionDirection: mapConnectionDirection });
 			await this.saveData(this.settings);
 			return true;
 		}
@@ -344,6 +351,16 @@ export default class ConnectionsPlugin extends Plugin {
 		for (let index = 0; index < this.settings.mappedTypes.length; index++) {
 			let mappedType = this.settings.mappedTypes[index];
 			if (mappedType.mapProperty == mapProperty) {
+				return index;
+			}
+		}
+		return -1;
+	}
+
+	findUnmappedConnectionType(connectionType: string) {
+		for (let index = 0; index < this.settings.unmappedTypes.length; index++) {
+			let unmappedType = this.settings.unmappedTypes[index];
+			if (unmappedType.connectionType == connectionType) {
 				return index;
 			}
 		}

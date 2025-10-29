@@ -1,17 +1,17 @@
 import { AbstractInputSuggest, Modal, Setting, TFile, SearchComponent, ButtonComponent } from 'obsidian';
 import type ConnectionsPlugin from 'src/main';
-import { ConnectionData } from 'src/main';
+import { ConnectionData, UnmappedConnectionType } from 'src/main';
 
 export class ConnectionsModal extends Modal {
   private cp: ConnectionsPlugin;
   public fromFile: TFile;
   public toFile: TFile;
   public connectionType: string;
-  public unmappedConnectionTypes: Array<string>;
+  public unmappedConnectionTypes: Array<UnmappedConnectionType>;
   private settings: Array<FocusableSetting>;
 
 
-  constructor(cp: ConnectionsPlugin, currentFile: TFile, unmappedConnectionTypes: Array<string>, onSubmit: (result: ConnectionData) => void) {
+  constructor(cp: ConnectionsPlugin, currentFile: TFile, unmappedConnectionTypes: Array<UnmappedConnectionType>, onSubmit: (result: ConnectionData) => void) {
     super(cp.app);
     this.cp = cp;
     this.fromFile = currentFile;
@@ -111,7 +111,7 @@ export class ConnectionTypeSuggestInput extends AbstractInputSuggest<string> {
   }
 
   getSuggestions(query: string): string[] {
-    return this.cm.unmappedConnectionTypes.filter((connectionType) => connectionType.includes(query));
+    return this.cm.unmappedConnectionTypes.filter((ct) => {return ct.connectionType.includes(query)}).map((ct) => ct.connectionType);
   }
 
   renderSuggestion(connectionType: string, el: HTMLElement) {

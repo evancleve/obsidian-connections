@@ -22,6 +22,5 @@
   },
   "include": [
     "**/*.ts",
-    "src/settings_tab*.tsx"  
-  ]
+    "**/*.tsx"]
 }
