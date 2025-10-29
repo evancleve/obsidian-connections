@@ -24,8 +24,8 @@ export interface MappedType {
 }
 
 export enum MappedConnectionDirection {
-	Forward = "forward",
-	Backward = "backward"
+	Left = "left",
+	Right = "right"
 }
 
 export interface ConnectionsSettings {
