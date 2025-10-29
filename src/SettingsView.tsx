@@ -93,7 +93,9 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
   deleteMappedType(mappedType: MappedConnectionType) {
     let idx = this.state.mappedTypes.indexOf(mappedType);
     if (idx != -1) {
-      this.setState({ mappedTypes: this.state.mappedTypes.toSpliced(idx, 1) });
+      let newMappedTypes = this.state.mappedTypes.map((x) => x);
+      newMappedTypes.splice(idx, 1);
+      this.setState({ mappedTypes: newMappedTypes });
     }
     this.deleteFunc(mappedType);
   }
@@ -256,7 +258,9 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
   deleteUnmappedType(unmappedConnectionType: UnmappedConnectionType) {
     let idx = this.state.unmappedTypes.indexOf(unmappedConnectionType);
     if (idx != -1) {
-      this.setState({ unmappedTypes: this.state.unmappedTypes.toSpliced(idx, 1) });
+      let newUnmappedTypes = this.state.unmappedTypes.map((x) => x);
+      newUnmappedTypes.splice(idx, 1);
+      this.setState({ unmappedTypes: newUnmappedTypes });
     }
     this.deleteFunc(unmappedConnectionType);
   }

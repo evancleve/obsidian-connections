@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import fs from 'node:fs';
 
 const banner =
 `/*
@@ -17,6 +18,7 @@ const context = await esbuild.context({
 	},
 	entryPoints: ["src/main.ts"],
 	bundle: true,
+	metafile: true,
 	external: [
 		"obsidian",
 		"electron",
@@ -46,7 +48,9 @@ const context = await esbuild.context({
 });
 
 if (prod) {
-	await context.rebuild();
+	let build = await context.rebuild();
+	fs.writeFileSync("build-meta.json", JSON.stringify(build.metafile))
+	// console.log(await esbuild.analyzeMetafile(build.metafile));
 	process.exit(0);
 } else {
 	await context.watch();
