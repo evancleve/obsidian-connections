@@ -1,6 +1,7 @@
 import { AbstractInputSuggest, Modal, Setting, TFile, SearchComponent, ButtonComponent } from 'obsidian';
-import type ConnectionsPlugin from 'src/main';
-import { ConnectionData, UnmappedConnectionType } from 'src/main';
+import type ConnectionsPlugin from './main';
+import { ConnectionData } from './main';
+import { UnmappedConnectionType } from './connection_types'
 
 export class ConnectionsModal extends Modal {
   private cp: ConnectionsPlugin;

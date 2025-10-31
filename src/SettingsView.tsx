@@ -1,4 +1,4 @@
-import { ConnectionsSettings, UnmappedConnectionType, MappedConnectionType, MappedConnectionDirection } from './main';
+import { ConnectionsSettings, UnmappedConnectionType, MappedConnectionType, MappedConnectionDirection } from './connection_types';
 import { Component } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';

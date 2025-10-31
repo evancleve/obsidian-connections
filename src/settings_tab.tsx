@@ -3,7 +3,7 @@ import { Root, createRoot } from 'react-dom/client';
 import { SettingsView } from './SettingsView';
 
 import type ConnectionsPlugin from "./main";
-import { MappedConnectionType, UnmappedConnectionType } from "./main";
+import { MappedConnectionType, UnmappedConnectionType } from "./connection_types";
 
 function isMappedConnectionType(val: MappedConnectionType | UnmappedConnectionType): val is MappedConnectionType {
     return (val as MappedConnectionType).mapProperty !== undefined;
