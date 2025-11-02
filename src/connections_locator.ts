@@ -2,7 +2,8 @@ import {
     Connection,
     ConnectionsSettings,
     isUnmappedConnectionRecord,
-    ConfirmedHalfConnection
+    ConfirmedHalfConnection,
+    MappedConnectionDirection
 } from './connection_types';
 import { FrontMatterCache, MetadataCache, TFile } from 'obsidian';
 
@@ -97,11 +98,15 @@ export class ConnectionsLocator {
             //Screwing around with maps, filters, and ternary expressions. Probably at the expense of readability!
             let foundMappedTypes = this.settings.mappedTypes.map((mt) => RegExp(`^${mt.mapProperty}\.?`).test(possibleLink.key) ? mt : null).filter((val) => val != null);
             for (let fmt of foundMappedTypes) {
-                foundMappedConnections.push({
-                    source: sourceFile,
-                    target: targetFile,
-                    ...fmt
-                });
+                if (fmt && fmt.connectionType as string && fmt.mapProperty as string && fmt.mapConnectionDirection as MappedConnectionDirection) {
+                    foundMappedConnections.push({
+                        source: sourceFile,
+                        target: targetFile,
+                        connectionType: fmt.connectionType,
+                        mapProperty: fmt.mapProperty,
+                        mapConnectionDirection: fmt.mapConnectionDirection
+                    });
+                }
             }
         }
         return foundMappedConnections;
