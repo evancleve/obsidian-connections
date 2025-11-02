@@ -18,6 +18,9 @@ export default class ConnectionsPlugin extends Plugin {
 
 		this.addSettingTab(new ConnectionsSettingTab(this));
 		this.settings = await this.loadData();
+		if (!this.settings) {
+			this.settings = {unmappedTypes: [], mappedTypes:[]}
+		}
 		this.cm = new ConnectionsManager(this);
 		this.cl = new ConnectionsLocator(this.settings, this.app.metadataCache);
 
