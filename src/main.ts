@@ -61,6 +61,13 @@ export default class ConnectionsPlugin extends Plugin {
 			}
 		});
 
+		this.app.workspace.on('active-leaf-change', async leaf => {
+			if (leaf && leaf.view instanceof ConnectionsView) {
+				let file = this.app.workspace.getActiveFile();
+				if (file) this.refreshConnectionsView(file);
+			}
+		});
+
 		this.app.metadataCache.on('changed', (file, data, cache) => {
 			this.refreshConnectionsView(file);
 		});
