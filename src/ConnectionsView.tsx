@@ -1,107 +1,61 @@
-import {TFile} from 'obsidian';
-import { Connection, MappedConnectionDirection } from './connection_types';
-import { Component } from 'react';
+import { ItemView, WorkspaceLeaf, TFile } from 'obsidian';
+import { Connection } from './connection_types';
 import { Root, createRoot } from 'react-dom/client';
+import { ConnectionsFooterImpl, ConnectionsFooterImplIFace } from './ConnectionsFooter';
 
-type OpenFunction = (file: TFile) => void;
+export const VIEW_TYPE_CONNECTIONS = 'connections-view';
 
-export interface ConnectionsViewIFace extends ConnectionsViewImplIFace{
-    containerEl: HTMLElement;
+
+type OpenLinkFunction = (file: TFile) => void;
+
+interface ConnectionsViewIFace {
+    leaf: WorkspaceLeaf;
+    connections?: Array<Connection>;
+    openLinkFunc: OpenLinkFunction;
+    activeFile?: TFile;
 }
 
-interface ConnectionsViewImplIFace {
-    connections: Array<Connection>;
-    openFunc: OpenFunction;
-    activeFile: TFile;
-}
+export class ConnectionsView extends ItemView {
+    root: Root
+    openLinkFunc: OpenLinkFunction;
 
-interface ConnectionLineIFace {
-    connection: Connection;
-    openFunc: OpenFunction;
-    activeFile: TFile;
-}
-
-interface ObsidianLinkIFace {
-    linkFile: TFile;
-    openFunc: OpenFunction;
-    activeFile: TFile;
-}
-
-export class ConnectionsView {
-    root: Root;
     constructor(props: ConnectionsViewIFace) {
-        let {containerEl, ...otherprops} = props;
-        this.root = createRoot(props.containerEl);
+        super(props.leaf);
+        console.log('ConnectionsView getting constructed...')
+        this.openLinkFunc = props.openLinkFunc;
+    }
+
+    getViewType() {
+        return VIEW_TYPE_CONNECTIONS;
+    }
+
+    getDisplayText() {
+        return 'Connections View';
+    }
+
+    getIcon() {
+        return 'lucide-handshake';
+    }
+
+    async onOpen() {
+        const container = this.contentEl;
+        container.empty();
+        container.createEl('h4', { text: 'Connections' });
+        this.root = createRoot(container.createEl('div'));
+    }
+
+    async onClose() {
+        console.log('View unloading!');
+        this.containerEl.empty();
+        this.root.unmount();
+    }
+
+    renderConnections(connections: Array<Connection>, activeFile: TFile) {
         this.root.render(
-            <ConnectionsViewImpl {...otherprops}/>
-        );
-    }
-
-    refresh(props: ConnectionsViewImplIFace) {
-        this.root.render(<ConnectionsViewImpl {...props}/>);
-    }
-}
-
-class ConnectionsViewImpl extends Component<ConnectionsViewImplIFace> {
-    render() {
-        let kg = new KeyGenerator();
-        let {connections, ...props} = this.props;
-        return <>
-        {
-        connections.map((connection: Connection) => (
-            <ConnectionLine 
-                key={kg.generateKey()} 
-                connection={connection} 
-                {...props}/>
-        ))
-        }
-        </>
-  }
-}
-
-class ConnectionLine extends Component<ConnectionLineIFace>{
-    render() {
-        let {connection, ...props} = this.props;
-        let leftItem, rightItem: TFile;
-        if ('mapConnectionDirection' in connection && connection.mapConnectionDirection === MappedConnectionDirection.Right) {
-            leftItem = connection.target;
-            rightItem = connection.source;
-        } else {
-            leftItem = connection.source;
-            rightItem = connection.target;
-        }
-        return <>
-            <div>
-                <span><ObsidianLink linkFile={leftItem} {...props}/></span>
-                <span> {this.props.connection.connectionType} </span>
-                <span><ObsidianLink linkFile={rightItem} {...props}/></span>
-            </div>
-        </>
-    }
-}
-
-class ObsidianLink extends Component<ObsidianLinkIFace> {
-    render() {
-        if (this.props.linkFile === this.props.activeFile) {
-            return <span className="same-document">{this.props.linkFile.basename}</span>
-        } else {
-            return <a
-                href={this.props.linkFile.path}
-                className='internal-link'
-                onClick={() => {this.props.openFunc(this.props.linkFile)}}
-            >{this.props.linkFile.basename}</a>
-        }
-    }
-}
-
-class KeyGenerator {
-    i: number;
-
-    constructor() {
-        this.i = 0;
-    }
-
-    generateKey() {
-        return `connection-${(this.i)++}`;
+            <ConnectionsFooterImpl 
+                connections={connections}
+                activeFile={activeFile}
+                openFunc={this.openLinkFunc}/>
+        )
     }
 }
