@@ -1,6 +1,6 @@
-import {TFile} from 'obsidian';
+import { TFile } from 'obsidian';
 
-export type UnmappedConnectionType = {connectionType: string;};
+export type UnmappedConnectionType = { connectionType: string; };
 
 export type MappedConnectionType = UnmappedConnectionType & {
     mapProperty: string;
@@ -13,8 +13,8 @@ export enum MappedConnectionDirection {
 };
 
 export type ConnectionBond = {
-	source: TFile;
-	target: TFile;
+    source: TFile;
+    target: TFile;
 };
 
 export type MappedConnection = MappedConnectionType & ConnectionBond;
@@ -25,7 +25,7 @@ export type Connection = MappedConnection | UnmappedConnection;
 
 export type ConnectionsSettings = {
     unmappedTypes: Array<UnmappedConnectionType>;
-    mappedTypes: Array<MappedConnectionType>;	
+    mappedTypes: Array<MappedConnectionType>;
 };
 
 export type UnmappedConnectionRecord = {

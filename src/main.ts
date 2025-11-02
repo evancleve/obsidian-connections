@@ -1,12 +1,12 @@
-import { 
-	ConnectionsSettings, 
-	UnmappedConnectionType, 
-	MappedConnectionDirection } from './connection_types';
-import { Plugin, TFile, OpenViewState, WorkspaceLeaf, TextComponent, AbstractTextComponent } from 'obsidian';
+import {
+	ConnectionsSettings,
+	UnmappedConnectionType,
+	MappedConnectionDirection
+} from './connection_types';
+import { Plugin, TFile, OpenViewState, WorkspaceLeaf } from 'obsidian';
 import { ConnectionsModal } from './connection_modal';
 import { ConnectionsSettingTab } from './settings_tab'
 import { ConnectionsLocator, stripLink } from './connections_locator';
-import {ConnectionsFooter} from './ConnectionsFooter';
 import { ConnectionsView, VIEW_TYPE_CONNECTIONS } from './ConnectionsView';
 
 export class ConnectionData {
@@ -21,14 +21,11 @@ export class ConnectionData {
 	}
 }
 
-
 export default class ConnectionsPlugin extends Plugin {
 
-	footerTextElement: HTMLElement;
-	cv: ConnectionsFooter;
 	settings: ConnectionsSettings;
 	cl: ConnectionsLocator;
-	seav: ConnectionsView;
+	cv: ConnectionsView;
 
 	async onload(): Promise<void> {
 
@@ -47,120 +44,53 @@ export default class ConnectionsPlugin extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: 'add-connections-pane',
+			name: 'Add the Connections pane to the right sidebar',
+			callback: () => { this.activateView() },
+		});
+
 		this.registerView(
 			VIEW_TYPE_CONNECTIONS,
-			(leaf) => this.seav = new ConnectionsView({leaf: leaf, openLinkFunc: this.openLinkedNote.bind(this)}));
-		this.app.workspace.onLayoutReady(() => {this.activateView()});
-
-		this.addRibbonIcon('circle', 'Print leaf types', () => {
-			this.app.workspace.iterateAllLeaves((leaf) => {
-				console.log(leaf.getViewState().type);
-			});
-			});
+			(leaf) => this.cv = new ConnectionsView({ leaf: leaf, openLinkFunc: this.openLinkedNote.bind(this) }));
+		this.app.workspace.onLayoutReady(() => { this.activateView() });
 
 		this.app.workspace.on('file-open', async file => {
 			if (file) {
-				console.log('Workspace file open, refreshing...');
 				this.refreshConnectionsView(file);
-				//this.refreshConnections(file);
 			}
 		});
 
 		this.app.metadataCache.on('changed', (file, data, cache) => {
-			console.log('Workspace changed, refreshing...')
 			this.refreshConnectionsView(file);
-			//this.refreshConnections(file);
 		});
 	}
 
 	async onunload(): Promise<void> {
-		if (this.footerTextElement) {
-			console.log('Workspace unloading, removing...');
-			// this.cv.root.unmount();
-			this.footerTextElement.remove();
-		}
+		//unload stuff here
 	}
 
-
-  async activateView() {
-    const { workspace } = this.app;
-
-    let leaf: WorkspaceLeaf | null = null;
-    const leaves = workspace.getLeavesOfType(VIEW_TYPE_CONNECTIONS);
-    if (leaves.length > 0) {
-      // A leaf with our view already exists, use that
-      leaf = leaves[0];
-    } else {
-      // Our view could not be found in the workspace, create a new leaf
-      // in the right sidebar for it
-      leaf = workspace.getRightLeaf(false) as WorkspaceLeaf;
-      await leaf.setViewState({ type: VIEW_TYPE_CONNECTIONS, active: false });
-    }
-    // "Reveal" the leaf in case it is in a collapsed sidebar
-    // workspace.revealLeaf(leaf);
-  }
+	async activateView() {
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CONNECTIONS);
+		if (leaves.length > 0) {
+			// A leaf with our view already exists, use that
+			leaf = leaves[0];
+		} else {
+			// Our view could not be found in the workspace, create a new leaf
+			// in the right sidebar for it
+			leaf = this.app.workspace.getRightLeaf(false) as WorkspaceLeaf;
+			await leaf.setViewState({ type: VIEW_TYPE_CONNECTIONS, active: false });
+		}
+	}
 
 	async refreshConnectionsView(file: TFile) {
-		console.log('Refreshing the connections view...');
-		if (!this.seav) {
+		if (!this.cv) {
 			return;
 		}
 		let connections = await this.cl.getConnections(file);
-		this.seav.renderConnections(connections, file);
+		this.cv.renderConnections(connections, file);
 	}
-	/**
-	 * Refreshes the content of the Connections footer.
-	 * @param {TFile} file - The active file
-	 */
-	async refreshConnections(file: TFile) {
-		let leaf = this.app.workspace.getMostRecentLeaf();
-		if (leaf) {
-			let foundFooter, footerTextElement;
-			foundFooter = leaf.view.containerEl.getElementsByClassName('connections-footer');
-			if (foundFooter.length > 0) {
-				footerTextElement = foundFooter[0] as HTMLDivElement;
-			} else {
-				footerTextElement = leaf.view.containerEl.createEl('div', {cls: 'connections-footer'});
-			}
-			let connections = await this.cl.getConnections(file);
-			this.cv = new ConnectionsFooter({
-				containerEl: footerTextElement, 
-				connections: connections, 
-				activeFile: file,
-				openFunc: this.openLinkedNote.bind(this)});
-			return;
-		}
-		let connections = await this.cl.getConnections(file);
-		this.cv.refresh({connections: connections, activeFile: file, openFunc: this.openLinkedNote.bind(this)});
-	}
-
-	// 	let btn = connectionLine.createEl('button', 'connection-button');
-	// 	btn.dataset.fromFile = fromFile.path;
-	// 	btn.dataset.toFile = toFile.path;
-	// 	btn.dataset.connectionType = connectionType;
-	// 	btn.dataset.forward = String(forward);
-	// 	btn.addEventListener('click', (ev: PointerEvent) => {
-	// 		let clickedBtn = ev.currentTarget;
-	// 		if (clickedBtn && clickedBtn instanceof HTMLButtonElement) {
-	// 			let sourceFile, linkedFile;
-	// 			let { fromFile, toFile, connectionType } = clickedBtn.dataset
-	// 			let forward = (clickedBtn.dataset.forward === 'true');
-	// 			if (fromFile === undefined || toFile === undefined || connectionType === undefined) {
-	// 				console.error('Missing parameters required to remove connection!');
-	// 				return;
-	// 			}
-	// 			if (forward) {
-	// 				sourceFile = this.app.vault.getFileByPath(fromFile);
-	// 				linkedFile = this.app.vault.getFileByPath(toFile);
-	// 			} else {
-	// 				sourceFile = this.app.vault.getFileByPath(toFile);
-	// 				linkedFile = this.app.vault.getFileByPath(fromFile);
-	// 			}
-	// 			if (sourceFile instanceof TFile && linkedFile instanceof TFile) {
-	// 				this.removeConnection(new ConnectionData(sourceFile, linkedFile, connectionType));
-	// 			}
-	// 		}
-	// 	});
 
 	/**
 	 * Adds a connection between files
@@ -187,7 +117,7 @@ export default class ConnectionsPlugin extends Plugin {
 		} else if (index > 0) {
 			this.settings.unmappedTypes.splice(index, 1);
 		}
-		this.settings.unmappedTypes.unshift({connectionType: connectionType})
+		this.settings.unmappedTypes.unshift({ connectionType: connectionType })
 		await this.saveData(this.settings);
 	}
 

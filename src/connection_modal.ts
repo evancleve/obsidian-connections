@@ -112,7 +112,7 @@ export class ConnectionTypeSuggestInput extends AbstractInputSuggest<string> {
   }
 
   getSuggestions(query: string): string[] {
-    return this.cm.unmappedConnectionTypes.filter((ct) => {return ct.connectionType.includes(query)}).map((ct) => ct.connectionType);
+    return this.cm.unmappedConnectionTypes.filter((ct) => { return ct.connectionType.includes(query) }).map((ct) => ct.connectionType);
   }
 
   renderSuggestion(connectionType: string, el: HTMLElement) {
