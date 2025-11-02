@@ -16,10 +16,6 @@ This plugin plays nicely with the Folder Notes plugin.
 
 ![Demo of obsidian-connections](demos/connections-demo-1.gif)
 
-## Attribution
-
-This plugin borrows a utility library from [obsidian-tagged-documents-viewer](https://github.com/mgeduld/obsidian-tagged-documents-viewer/blob/master/src/utils/links.ts).
-
 ## Support
 
 If you have any suggestions on features I could, add please let me know via my [GitHub](https://github.com/evancleve/obsidian-connections)! If you feel like donating some spare change, feel free to do that here: [https://buymeacoffee.com/envancleve](https://buymeacoffee.com/envancleve).

@@ -1,4 +1,4 @@
-import { ConnectionsSettings, UnmappedConnectionType, MappedConnectionType, MappedConnectionDirection } from './connection_types';
+import { ConnectionsSettings, MappedConnectionType, MappedConnectionDirection, UnmappedConnectionType } from './connection_types';
 import { Component } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -299,7 +299,7 @@ class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTy
       foundError = true;
     }
     if (!foundError) {
-      let result = await this.actionFunc({connectionType: this.state.connectionType});
+      let result = await this.actionFunc({ connectionType: this.state.connectionType });
       if (result) {
         this.setState({ connectionType: '', unmappedTypeError: '' });
       } else {

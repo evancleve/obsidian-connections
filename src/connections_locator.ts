@@ -1,13 +1,14 @@
 import {
+    ConfirmedHalfConnection,
     Connection,
     ConnectionsSettings,
     isUnmappedConnectionRecord,
-    ConfirmedHalfConnection,
     MappedConnectionDirection
 } from './connection_types';
 import { FrontMatterCache, MetadataCache, TFile } from 'obsidian';
+import { stripLink } from './utils';
 
-export class ConnectionsLocator {
+export default class ConnectionsLocator {
     settings: ConnectionsSettings;
     metadataCache: MetadataCache;
 
@@ -62,14 +63,19 @@ export class ConnectionsLocator {
         let foundMappedConnections: Array<ConfirmedHalfConnection> = [];
         for (let mappedType of this.settings.mappedTypes) {
             if (mappedType.mapProperty in metadata) {
-                let linkedFile = this.getValidFileFromStringOrNull(metadata[mappedType.mapProperty]);
-                if (linkedFile) {
-                    foundMappedConnections.push({
-                        connectionType: mappedType.connectionType,
-                        target: linkedFile,
-                        mapConnectionDirection: mappedType.mapConnectionDirection,
-                        mapProperty: mappedType.mapProperty
-                    })
+                //Convert a non-array property to an array for the upcoming loop.
+                let entries;
+                Array.isArray(metadata[mappedType.mapProperty]) ? entries = metadata[mappedType.mapProperty] : entries = [metadata[mappedType.mapProperty]]
+                for (let entry of entries) {
+                    let linkedFile = this.getValidFileFromStringOrNull(entry);
+                    if (linkedFile) {
+                        foundMappedConnections.push({
+                            connectionType: mappedType.connectionType,
+                            target: linkedFile,
+                            mapConnectionDirection: mappedType.mapConnectionDirection,
+                            mapProperty: mappedType.mapProperty
+                        })
+                    }
                 }
             }
         }
@@ -149,20 +155,5 @@ export class ConnectionsLocator {
     async getMetadata(file: TFile): Promise<FrontMatterCache | null> {
         const fileCache = this.metadataCache.getFileCache(file);
         return fileCache?.frontmatter || null;
-    }
-}
-
-/**
- * Removes [[]]]] from a file link, if required.
- * @param {link} string - A  object describing the connection.
- * @returns {string}
- */
-export function stripLink(link: string) {
-    let linkRegExp = RegExp('\\[?\\[?([^\\[\\]]+)\\]?\\]?');
-    let linkResults;
-    if ((linkResults = linkRegExp.exec(link)) != null) {
-        return linkResults[1];
-    } else {
-        return link;
     }
 }

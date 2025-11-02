@@ -1,0 +1,198 @@
+import {
+    Connection,
+    UnmappedConnection,
+    isUnmappedConnection,
+    MappedConnection,
+    isMappedConnection,
+    MappedConnectionType,
+    isMappedConnectionType,
+    UnmappedConnectionType
+} from './connection_types';
+import ConnectionsPlugin from './main';
+import { stripLink } from './utils';
+
+export default class ConnectionManager {
+    cp: ConnectionsPlugin
+
+    constructor(cp: ConnectionsPlugin) {
+        this.cp = cp;
+    }
+
+    async addConnection(connection: Connection) {
+        if (isMappedConnection(connection)) {
+            return await this.addMappedConnection(connection);
+        } else if (isUnmappedConnection(connection)) {
+            return await this.addUnmappedConnection(connection);
+        }
+        console.error('Can\'t find a type for this connection: ', connection);
+    }
+
+    async addUnmappedConnection(uc: UnmappedConnection) {
+        if (uc.source) {
+            await this.cp.app.fileManager.processFrontMatter(uc.source, (frontmatter) => {
+                if (!frontmatter['connections']) {
+                    frontmatter['connections'] = [];
+                }
+                frontmatter['connections'].push({
+                    'connectionType': uc.connectionType,
+                    'link': `[[${this.cp.app.metadataCache.fileToLinktext(uc.target, '')}]]`
+                })
+            });
+            //TODO: add the reordering connection types, use copyWithin?
+            //     // If the last connectionType we used isn't at the front of the list, move it there.
+            //     const index = this.findUnmappedConnectionType(connectionType);
+            //     if (index == 0) {
+            //         return;
+            //     } else if (index > 0) {
+            //         this.cp.settings.unmappedTypes.splice(index, 1);
+            //     }
+            //     this.cp.settings.unmappedTypes.unshift({ connectionType: connectionType })
+            //     await this.cp.saveData(this.cp.settings);
+        }
+    }
+
+    async addMappedConnection(mc: MappedConnection) {
+        if (mc.source) {
+            await this.cp.app.fileManager.processFrontMatter(mc.source, (frontmatter) => {
+                if (!frontmatter[mc.mapProperty]) {
+                    frontmatter[mc.mapProperty] = [];
+                }
+                //Since we're adding a new connection, we might to convert an existing property to a array.
+                if (!Array.isArray(frontmatter[mc.mapProperty])) {
+                    frontmatter[mc.mapProperty] = [frontmatter[mc.mapProperty]];
+                }
+                frontmatter[mc.mapProperty].push(`[[${this.cp.app.metadataCache.fileToLinktext(mc.target, '')}]]`)
+            });
+        }
+    }
+
+    async addConnectionType(ct: MappedConnectionType | UnmappedConnectionType) {
+        if (isMappedConnectionType(ct)) {
+            return await this.addMappedConnectionType(ct);
+        } else {
+            return await this.addUnmappedConnectionType(ct);
+        }
+    }
+
+    async deleteConnectionType(ct: MappedConnectionType | UnmappedConnectionType) {
+        if (isMappedConnectionType(ct)) {
+            return await this.deleteMappedConnectionType(ct);
+        } else {
+            return await this.deleteUnmappedConnectionType(ct);
+        }
+    }
+
+    async deleteConnection(connection: Connection) {
+        if (isMappedConnection(connection)) {
+            return await this.deleteMappedConnection(connection);
+        } else if (isUnmappedConnection(connection)) {
+            return await this.deleteUnmappedConnection(connection);
+        }
+        console.error('Can\'t find a type for this connection: ', connection);
+    }
+
+    async deleteUnmappedConnection(uc: Connection) {
+        if (uc.source) {
+            await this.cp.app.fileManager.processFrontMatter(uc.source, (frontmatter) => {
+                if (frontmatter['connections']) {
+                    let pos = 0;
+                    for (let connection of frontmatter['connections']) {
+                        let resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(stripLink(connection['link']), '');
+                        if (connection['connectionType'] == uc.connectionType && uc.target == resolvedLink) {
+                            frontmatter['connections'].splice(pos, 1);
+                        }
+                        pos++;
+                    }
+                }
+                if (frontmatter['connections'].length == 0) {
+                    delete frontmatter['connections'];
+                }
+            });
+        }
+    }
+
+    async deleteMappedConnection(mc: MappedConnection) {
+        if (mc.source) {
+            await this.cp.app.fileManager.processFrontMatter(mc.source, (frontmatter) => {
+                if (frontmatter[mc.mapProperty]) {
+                    if (Array.isArray(frontmatter[mc.mapProperty])) {
+                        let pos = 0;
+                        for (let connection of frontmatter[mc.mapProperty]) {
+                            let resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(stripLink(connection), '');
+                            if (mc.target == resolvedLink) {
+                                frontmatter[mc.mapProperty].splice(pos, 1);
+                            }
+                            pos++;
+                        }
+                        if (frontmatter[mc.mapProperty].length == 0) {
+                            delete frontmatter[mc.mapProperty];
+                        }
+                    } else {
+                        delete frontmatter[mc.mapProperty];
+                    }
+                }
+            });
+        }
+    }
+
+    async addUnmappedConnectionType(umt: UnmappedConnectionType): Promise<boolean> {
+        if (umt.connectionType === 'hahaha') return false;
+        const index = this.findUnmappedConnectionType(umt.connectionType);
+        if (index == -1) {
+            this.cp.settings.unmappedTypes.push(umt);
+            await this.cp.saveData(this.cp.settings);
+            return true;
+        }
+        return false;
+    }
+
+    async deleteUnmappedConnectionType(umt: UnmappedConnectionType) {
+        const index = this.findUnmappedConnectionType(umt.connectionType);
+        if (index > -1) {
+            this.cp.settings.unmappedTypes.splice(index, 1);
+            await this.cp.saveData(this.cp.settings);
+        }
+    }
+
+    async addMappedConnectionType(mt: MappedConnectionType): Promise<boolean> {
+        let index = this.findMappedConnectionType(mt.mapProperty);
+        if (index == -1) {
+            this.cp.settings.mappedTypes.push({
+                mapProperty: mt.mapProperty,
+                connectionType: mt.connectionType,
+                mapConnectionDirection: mt.mapConnectionDirection
+            });
+            await this.cp.saveData(this.cp.settings);
+            return true;
+        }
+        return false;
+    }
+
+    async deleteMappedConnectionType(mt: MappedConnectionType) {
+        let index = this.findMappedConnectionType(mt.mapProperty);
+        if (index != -1) {
+            this.cp.settings.mappedTypes.splice(index, 1);
+            await this.cp.saveData(this.cp.settings);
+        }
+    }
+
+    findMappedConnectionType(mapProperty: string) {
+        for (let index = 0; index < this.cp.settings.mappedTypes.length; index++) {
+            let mappedType = this.cp.settings.mappedTypes[index];
+            if (mappedType.mapProperty == mapProperty) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    findUnmappedConnectionType(connectionType: string) {
+        for (let index = 0; index < this.cp.settings.unmappedTypes.length; index++) {
+            let unmappedType = this.cp.settings.unmappedTypes[index];
+            if (unmappedType.connectionType == connectionType) {
+                return index;
+            }
+        }
+        return -1;
+    }
+}

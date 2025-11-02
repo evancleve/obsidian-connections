@@ -1,22 +1,22 @@
-import { AbstractInputSuggest, Modal, Setting, TFile, SearchComponent, ButtonComponent } from 'obsidian';
+import { AbstractInputSuggest, ButtonComponent, Modal, SearchComponent, Setting, TFile } from 'obsidian';
 import type ConnectionsPlugin from './main';
-import { ConnectionData } from './main';
-import { UnmappedConnectionType } from './connection_types'
+import { Connection, ConnectionType, MappedConnectionDirection } from './connection_types'
 
 export class ConnectionsModal extends Modal {
   private cp: ConnectionsPlugin;
   public fromFile: TFile;
   public toFile: TFile;
-  public connectionType: string;
-  public unmappedConnectionTypes: Array<UnmappedConnectionType>;
+  public connectionType: ConnectionType;
+  public enteredText: string;
+  public connectionTypes: Array<ConnectionType>
   private settings: Array<FocusableSetting>;
 
 
-  constructor(cp: ConnectionsPlugin, currentFile: TFile, unmappedConnectionTypes: Array<UnmappedConnectionType>, onSubmit: (result: ConnectionData) => void) {
+  constructor(cp: ConnectionsPlugin, currentFile: TFile, connectionTypes: Array<ConnectionType>, onSubmit: (result: Connection) => void) {
     super(cp.app);
     this.cp = cp;
     this.fromFile = currentFile;
-    this.unmappedConnectionTypes = unmappedConnectionTypes;
+    this.connectionTypes = connectionTypes;
     this.settings = [];
     this.contentEl.addEventListener('identifySettingEvent', (evt: CustomEvent) => this.focusOnNextSetting(evt));
     this.contentEl.addEventListener('removeConnectionType', (evt: CustomEvent) => this.removeConnectionType(evt));
@@ -39,11 +39,28 @@ export class ConnectionsModal extends Modal {
         btn
           .setButtonText('Add Connection')
           .setCta()
-          .onClick(() => {
+          .onClick(async () => {
             this.close();
-            onSubmit(new ConnectionData(this.fromFile, this.toFile, this.connectionType));
+            //If a connection type isn't already selected, add the contents of the input box as a new unmapped connection type.
+            if (!this.connectionType) {
+              this.connectionType = { connectionType: this.enteredText } as ConnectionType;
+              if (!await this.cp.cm.addUnmappedConnectionType(this.connectionType)) {
+                //TODO: error handling
+                console.log('Something went horribly wrong!');
+              };
+            }
+            let bond;
+            // Right-mapped connections need the source and target flipped!
+            if ('mapConnectionDirection' in this.connectionType && this.connectionType.mapConnectionDirection == MappedConnectionDirection.Right) {
+              bond = { source: this.toFile, target: this.fromFile };
+            } else {
+              bond = { source: this.fromFile, target: this.toFile };
+            }
+            let connection = Object.assign(bond, { ...this.connectionType })
+            onSubmit(connection);
           }
           )));
+
   }
 
   /**
@@ -63,7 +80,7 @@ export class ConnectionsModal extends Modal {
    * @param {CustomEvent} evt - An event containing the connectionType to remove.
    */
   removeConnectionType(evt: CustomEvent) {
-    this.cp.removeConnectionType(evt.detail.connectionType);
+    this.cp.cm.deleteConnectionType(evt.detail.connectionType);
   }
 }
 
@@ -101,7 +118,7 @@ export class NoteSuggestInput extends AbstractInputSuggest<TFile> {
   }
 }
 
-export class ConnectionTypeSuggestInput extends AbstractInputSuggest<string> {
+export class ConnectionTypeSuggestInput extends AbstractInputSuggest<ConnectionType> {
   private cm: ConnectionsModal;
   private inputEl: HTMLInputElement;
 
@@ -111,13 +128,12 @@ export class ConnectionTypeSuggestInput extends AbstractInputSuggest<string> {
     this.inputEl = inputEl;
   }
 
-  getSuggestions(query: string): string[] {
-    return this.cm.unmappedConnectionTypes.filter((ct) => { return ct.connectionType.includes(query) }).map((ct) => ct.connectionType);
+  getSuggestions(query: string): ConnectionType[] {
+    return this.cm.connectionTypes.filter((ct) => { return ct.connectionType.includes(query) }).map((ct) => ct);
   }
 
-  renderSuggestion(connectionType: string, el: HTMLElement) {
+  renderSuggestion(ct: ConnectionType, el: HTMLElement) {
     let btn = el.createEl('button', 'connection-button')
-    btn.dataset['connectionType'] = connectionType;
     btn.addEventListener('click', (ev: PointerEvent) => {
       ev.stopPropagation();
       let clickedBtn = ev.currentTarget as HTMLButtonElement;
@@ -125,23 +141,22 @@ export class ConnectionTypeSuggestInput extends AbstractInputSuggest<string> {
       this.inputEl.dispatchEvent(event);
       clickedBtn.parentElement?.remove();
     });
-    el.createEl('span', { text: connectionType });
+    el.createEl('span', { text: ct.connectionType });
 
   }
 
-  selectSuggestion(selectedConnection: string): void {
-    this.inputEl.value = selectedConnection;
+  selectSuggestion(selectedConnection: ConnectionType): void {
+    this.inputEl.value = selectedConnection.connectionType;
     this.cm.connectionType = selectedConnection
     this.inputEl.dispatchEvent(new CustomEvent('suggestionSelectedEvent', { bubbles: true }));
     this.close();
   }
 
   getValue(): string {
-    this.cm.connectionType = super.getValue();
+    this.cm.enteredText = super.getValue();
     return super.getValue();
   }
 }
-
 
 class FocusableSetting extends Setting {
   public settingId: string;

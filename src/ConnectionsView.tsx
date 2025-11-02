@@ -1,15 +1,24 @@
-import { ItemView, WorkspaceLeaf, TFile } from 'obsidian';
+import { ItemView, TFile, WorkspaceLeaf } from 'obsidian';
 import { Root, createRoot } from 'react-dom/client';
 import { Connection, MappedConnectionDirection } from './connection_types';
 import { Component } from 'react';
+import Button from '@mui/material/Button';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import Delete from '@mui/icons-material/Delete';
 
 export const VIEW_TYPE_CONNECTIONS = 'connections-view';
 
 type OpenLinkFunction = (file: TFile) => void;
+type DeleteConnectionFunction = (arg: Connection) => void;
 
 interface ConnectionsViewContentIFace {
     connections: Array<Connection>;
     openFunc: OpenLinkFunction;
+    deleteConnectionFunc: DeleteConnectionFunction;
     activeFile: TFile;
 }
 
@@ -29,16 +38,19 @@ interface ConnectionsViewIFace {
     leaf: WorkspaceLeaf;
     connections?: Array<Connection>;
     openLinkFunc: OpenLinkFunction;
+    deleteConnectionFunc: DeleteConnectionFunction;
     activeFile?: TFile;
 }
 
 export class ConnectionsView extends ItemView {
     root: Root | null
     openLinkFunc: OpenLinkFunction;
+    deleteConnectionFunc: DeleteConnectionFunction;
 
     constructor(props: ConnectionsViewIFace) {
         super(props.leaf);
         this.openLinkFunc = props.openLinkFunc;
+        this.deleteConnectionFunc = props.deleteConnectionFunc;
     }
 
     getViewType() {
@@ -46,7 +58,7 @@ export class ConnectionsView extends ItemView {
     }
 
     getDisplayText() {
-        return 'Connections View';
+        return 'Connections';
     }
 
     getIcon() {
@@ -73,7 +85,8 @@ export class ConnectionsView extends ItemView {
             <ConnectionsViewContent
                 connections={connections}
                 activeFile={activeFile}
-                openFunc={this.openLinkFunc} />
+                openFunc={this.openLinkFunc}
+                deleteConnectionFunc={this.deleteConnectionFunc} />
         )
     }
 }
@@ -83,17 +96,31 @@ class ConnectionsViewContent extends Component<ConnectionsViewContentIFace> {
         let kg = new KeyGenerator();
         let { connections, ...props } = this.props;
         return <>
-        <ul>
-            {
-                connections.map((connection: Connection) => (
-                    <li key={kg.generateKey()}>
-                    <ConnectionLine
-                        connection={connection}
-                        {...props} />
-                    </li>
-                ))
-            }
-        </ul>
+            <Table size="small">
+                <TableHead>
+                    <TableRow>
+                        <TableCell><span className="connections-settings-table-header">Connection</span></TableCell>
+                        <TableCell><span className="connections-settings-table-header"></span></TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {connections.map((connection: Connection) => (
+                        <TableRow
+                            key={kg.generateKey()}
+                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                            <TableCell>
+                                <ConnectionLine
+                                    connection={connection}
+                                    {...props} />
+                            </TableCell>
+                            <TableCell align="right">
+                                <DeleteButton actionFunc={props.deleteConnectionFunc} connection={connection} />
+                            </TableCell>
+                        </TableRow>
+
+                    ))}
+                </TableBody>
+            </Table>
         </>
     }
 }
@@ -143,4 +170,15 @@ class KeyGenerator {
     generateKey() {
         return `connection-${(this.i)++}`;
     }
+}
+
+interface DeleteButtonIface {
+    actionFunc: (arg: Connection) => void;
+    connection: Connection;
+}
+
+const DeleteButton = (props: DeleteButtonIface) => {
+    return <Button size="small" onClick={() => {
+        props.actionFunc(props.connection);
+    }}><Delete /></Button>
 }

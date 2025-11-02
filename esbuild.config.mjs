@@ -50,7 +50,6 @@ const context = await esbuild.context({
 if (prod) {
 	let build = await context.rebuild();
 	fs.writeFileSync("build-meta.json", JSON.stringify(build.metafile))
-	// console.log(await esbuild.analyzeMetafile(build.metafile));
 	process.exit(0);
 } else {
 	await context.watch();
