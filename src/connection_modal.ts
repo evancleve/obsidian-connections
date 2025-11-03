@@ -20,16 +20,16 @@ export class ConnectionsModal extends Modal {
     this.settings = [];
     this.contentEl.addEventListener('identifySettingEvent', (evt: CustomEvent) => this.focusOnNextSetting(evt));
     this.contentEl.addEventListener('removeConnectionType', (evt: CustomEvent) => this.removeConnectionType(evt));
-    this.setTitle('Add a Connection');
+    this.setTitle('Add a connection');
 
     this.settings.push(new FocusableSetting(this.contentEl, 'connection-type')
-      .setName('Connection Type')
+      .setName('Connection type')
       .addSearch((text) => {
         new ConnectionTypeSuggestInput(cp, this, text.inputEl);
       }));
 
     this.settings.push(new FocusableSetting(this.contentEl, 'to-note')
-      .setName('Search for Note')
+      .setName('Search for note')
       .addSearch((text) => {
         new NoteSuggestInput(cp, this, text.inputEl);
       }));
@@ -37,7 +37,7 @@ export class ConnectionsModal extends Modal {
     this.settings.push(new FocusableSetting(this.contentEl, 'submit-button')
       .addButton((btn) =>
         btn
-          .setButtonText('Add Connection')
+          .setButtonText('Add connection')
           .setCta()
           .onClick(async () => {
             this.close();

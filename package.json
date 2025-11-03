@@ -21,6 +21,7 @@
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.17.3",
 		"eslint": "^9.39.0",
+		"eslint-plugin-obsidianmd": "^0.1.6",
 		"globals": "^16.5.0",
 		"obsidian": "latest",
 		"tslib": "2.4.0",

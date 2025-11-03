@@ -1,9 +1,13 @@
 import { TFile } from 'obsidian';
 
+export function isAnObjectWithProperties (obj: unknown) {
+    return (typeof obj === 'object') && (obj != null)
+}
+
 export type UnmappedConnectionType = { connectionType: string; };
 
-export function isUnmappedConnectionType(obj: any): obj is MappedConnectionType {
-    return ('connectionType' in obj) && (obj.connectionType != '') &&
+export function isUnmappedConnectionType(obj: unknown): obj is MappedConnectionType {
+    return isAnObjectWithProperties(obj) && ('connectionType' in obj) && (obj.connectionType != '') &&
         !('mapProperty' in obj) && !('mapConnectionDirection' in obj) && !('mapConnectionDirection' in obj)
 }
 
@@ -12,15 +16,15 @@ export type MappedConnectionType = UnmappedConnectionType & {
     mapConnectionDirection: MappedConnectionDirection;
 };
 
-export function isMappedConnectionType(obj: any): obj is MappedConnectionType {
-    return ('connectionType' in obj) && (obj.connectionType != '') &&
+export function isMappedConnectionType(obj: unknown): obj is MappedConnectionType {
+    return isAnObjectWithProperties(obj) && ('connectionType' in obj) && (obj.connectionType != '') &&
         ('mapProperty' in obj) && (obj.mapProperty != '') &&
-        ('mapConnectionDirection' in obj) && (isMappedConnectionDirection(obj.mapConnectionDirection))
+        ('mapConnectionDirection' in obj) && (isMappedConnectionDirection(obj.mapConnectionDirection as string))
 }
 
 export type ConnectionType = UnmappedConnection | MappedConnectionType;
 
-export function isConnectionType(obj: any): obj is ConnectionType {
+export function isConnectionType(obj: unknown): obj is ConnectionType {
     return isUnmappedConnectionType(obj) || isMappedConnectionType(obj);
 }
 
@@ -44,20 +48,20 @@ export type ConnectionBond = {
     target: TFile;
 };
 
-export const isConnectionBond = (obj: any): obj is ConnectionBond => {
-    return ('source' in obj) && (obj.source instanceof TFile) &&
+export const isConnectionBond = (obj: unknown): obj is ConnectionBond => {
+    return isAnObjectWithProperties(obj) && ('source' in obj) && (obj.source instanceof TFile) &&
         ('target' in obj) && (obj.target instanceof TFile)
 }
 
 export type MappedConnection = MappedConnectionType & ConnectionBond;
 
-export const isMappedConnection = (obj: any): obj is MappedConnection => {
+export const isMappedConnection = (obj: unknown): obj is MappedConnection => {
     return isMappedConnectionType(obj) && isConnectionBond(obj)
 }
 
 export type UnmappedConnection = UnmappedConnectionType & ConnectionBond;
 
-export const isUnmappedConnection = (obj: any): obj is MappedConnection => {
+export const isUnmappedConnection = (obj: unknown): obj is MappedConnection => {
     return isUnmappedConnectionType(obj) && isConnectionBond(obj)
 }
 
@@ -73,8 +77,8 @@ export type UnmappedConnectionRecord = {
     link: string;
 }
 
-export const isUnmappedConnectionRecord = (obj: any): obj is UnmappedConnectionRecord => {
-    return ('connectionType' in obj) && ('link' in obj) && (obj.connectionType != '')
+export const isUnmappedConnectionRecord = (obj: unknown): obj is UnmappedConnectionRecord => {
+    return isAnObjectWithProperties(obj) && ('connectionType' in obj) && ('link' in obj) && (obj.connectionType != '')
 }
 
 export type ConfirmedHalfConnection = {

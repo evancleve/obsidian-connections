@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
 import { FlatCompat } from "@eslint/eslintrc";
+import obsidianmd from "eslint-plugin-obsidianmd";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,16 +16,18 @@ const compat = new FlatCompat({
     allConfig: js.configs.all
 });
 
-export default defineConfig([globalIgnores(["**/node_modules/", "**/main.js"]), {
+export default defineConfig([globalIgnores(["**/node_modules/", "**/main.js"]),
+    ...obsidianmd.configs.recommended, 
+    {
     extends: compat.extends(
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
     ),
 
-    // plugins: {
-    //     "@typescript-eslint": typescriptEslint,
-    // },
+    plugins: {
+        "@typescript-eslint": typescriptEslint,
+    },
 
     languageOptions: {
         globals: {
@@ -32,6 +35,9 @@ export default defineConfig([globalIgnores(["**/node_modules/", "**/main.js"]), 
         },
 
         parser: tsParser,
+        parserOptions: {
+            projectService: true
+        },
         ecmaVersion: 5,
         sourceType: "module",
     },

@@ -65,7 +65,11 @@ export default class ConnectionsLocator {
             if (mappedType.mapProperty in metadata) {
                 //Convert a non-array property to an array for the upcoming loop.
                 let entries;
-                Array.isArray(metadata[mappedType.mapProperty]) ? entries = metadata[mappedType.mapProperty] : entries = [metadata[mappedType.mapProperty]]
+                if (Array.isArray(metadata[mappedType.mapProperty])) {
+                    entries = metadata[mappedType.mapProperty]
+                } else {
+                    entries = [metadata[mappedType.mapProperty]]
+                }
                 for (const entry of entries) {
                     const linkedFile = this.getValidFileFromStringOrNull(entry);
                     if (linkedFile) {
@@ -102,7 +106,7 @@ export default class ConnectionsLocator {
         const foundMappedConnections: Array<Connection> = [];
         for (const possibleLink of possibleLinks) {
             //Screwing around with maps, filters, and ternary expressions. Probably at the expense of readability!
-            const foundMappedTypes = this.settings.mappedTypes.map((mt) => RegExp(`^${mt.mapProperty}\.?`).test(possibleLink.key) ? mt : null).filter((val) => val != null);
+            const foundMappedTypes = this.settings.mappedTypes.map((mt) => RegExp(`^${mt.mapProperty}\\.?`).test(possibleLink.key) ? mt : null).filter((val) => val != null);
             for (const fmt of foundMappedTypes) {
                 if (fmt && fmt.connectionType as string && fmt.mapProperty as string && fmt.mapConnectionDirection as MappedConnectionDirection) {
                     foundMappedConnections.push({
