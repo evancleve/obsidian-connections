@@ -18,7 +18,7 @@ export default class ConnectionsLocator {
     }
 
     async getConnections(file: TFile) {
-        let connections: Array<Connection> = [];
+        const connections: Array<Connection> = [];
         connections.push(...await this.getConnectionsAsSource(file));
         connections.push(...await this.getConnectionsAsTarget(file));
         return connections;
@@ -26,7 +26,7 @@ export default class ConnectionsLocator {
 
     async getConnectionsAsSource(file: TFile): Promise<Array<Connection>> {
         const metadata = await this.getMetadata(file);
-        let sourceConnections: Array<Connection> = [];
+        const sourceConnections: Array<Connection> = [];
         if (metadata) {
             // Get the connnections and add the source before returning them as full-fledged Connection variants.
             sourceConnections.push(...
@@ -40,14 +40,14 @@ export default class ConnectionsLocator {
     }
 
     getUnmappedConnectionsAsSource(metadata: Record<string, string>): Array<ConfirmedHalfConnection> {
-        let foundUnmappedConnections: Array<ConfirmedHalfConnection> = [];
-        let possibleUnmappedConnections = metadata['connections']
+        const foundUnmappedConnections: Array<ConfirmedHalfConnection> = [];
+        const possibleUnmappedConnections = metadata['connections']
         if (possibleUnmappedConnections) {
-            for (let possibleConnection of possibleUnmappedConnections) {
+            for (const possibleConnection of possibleUnmappedConnections) {
                 if (!isUnmappedConnectionRecord(possibleConnection)) {
                     continue;
                 }
-                let linkedFile = this.getValidFileFromStringOrNull(possibleConnection.link);
+                const linkedFile = this.getValidFileFromStringOrNull(possibleConnection.link);
                 if (linkedFile) {
                     foundUnmappedConnections.push({
                         connectionType: possibleConnection.connectionType,
@@ -60,14 +60,14 @@ export default class ConnectionsLocator {
     }
 
     getMappedConnectionsAsSource(metadata: Record<string, string>): Array<ConfirmedHalfConnection> {
-        let foundMappedConnections: Array<ConfirmedHalfConnection> = [];
-        for (let mappedType of this.settings.mappedTypes) {
+        const foundMappedConnections: Array<ConfirmedHalfConnection> = [];
+        for (const mappedType of this.settings.mappedTypes) {
             if (mappedType.mapProperty in metadata) {
                 //Convert a non-array property to an array for the upcoming loop.
                 let entries;
                 Array.isArray(metadata[mappedType.mapProperty]) ? entries = metadata[mappedType.mapProperty] : entries = [metadata[mappedType.mapProperty]]
-                for (let entry of entries) {
-                    let linkedFile = this.getValidFileFromStringOrNull(entry);
+                for (const entry of entries) {
+                    const linkedFile = this.getValidFileFromStringOrNull(entry);
                     if (linkedFile) {
                         foundMappedConnections.push({
                             connectionType: mappedType.connectionType,
@@ -83,15 +83,15 @@ export default class ConnectionsLocator {
     }
 
     async getConnectionsAsTarget(targetFile: TFile): Promise<Array<Connection>> {
-        let foundConnections: Array<Connection> = [];
+        const foundConnections: Array<Connection> = [];
         //@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
-        let backlinks = this.metadataCache.getBacklinksForFile(targetFile);
-        for (let linkingFileName of backlinks.keys()) {
-            let sourceFile = this.getValidFileFromStringOrNull(linkingFileName)
+        const backlinks = this.metadataCache.getBacklinksForFile(targetFile);
+        for (const linkingFileName of backlinks.keys()) {
+            const sourceFile = this.getValidFileFromStringOrNull(linkingFileName)
             if (!sourceFile) {
                 continue;
             }
-            let possibleLinks = backlinks.get(linkingFileName)
+            const possibleLinks = backlinks.get(linkingFileName)
             foundConnections.push(...this.getMappedConnectionsAsTargetFromFile(sourceFile, targetFile, possibleLinks));
             foundConnections.push(...await this.getUnmappedConnectionsAsTargetFromFile(sourceFile, targetFile, possibleLinks));
         }
@@ -99,11 +99,11 @@ export default class ConnectionsLocator {
     }
 
     getMappedConnectionsAsTargetFromFile(sourceFile: TFile, targetFile: TFile, possibleLinks: Array<{ key: string }>): Array<Connection> {
-        let foundMappedConnections: Array<Connection> = [];
-        for (let possibleLink of possibleLinks) {
+        const foundMappedConnections: Array<Connection> = [];
+        for (const possibleLink of possibleLinks) {
             //Screwing around with maps, filters, and ternary expressions. Probably at the expense of readability!
-            let foundMappedTypes = this.settings.mappedTypes.map((mt) => RegExp(`^${mt.mapProperty}\.?`).test(possibleLink.key) ? mt : null).filter((val) => val != null);
-            for (let fmt of foundMappedTypes) {
+            const foundMappedTypes = this.settings.mappedTypes.map((mt) => RegExp(`^${mt.mapProperty}\.?`).test(possibleLink.key) ? mt : null).filter((val) => val != null);
+            for (const fmt of foundMappedTypes) {
                 if (fmt && fmt.connectionType as string && fmt.mapProperty as string && fmt.mapConnectionDirection as MappedConnectionDirection) {
                     foundMappedConnections.push({
                         source: sourceFile,
@@ -119,13 +119,13 @@ export default class ConnectionsLocator {
     }
 
     async getUnmappedConnectionsAsTargetFromFile(sourceFile: TFile, targetFile: TFile, possibleLinks: Array<{ key: string }>): Promise<Array<Connection>> {
-        let foundUnmappedConnections: Array<Connection> = [];
+        const foundUnmappedConnections: Array<Connection> = [];
         const connectionsRegExp = RegExp('connections\\.(\\d+)');
         let fileMetadata: FrontMatterCache | null = null;
         let connectionsRegExpResults;
-        for (let possibleLink of possibleLinks) {
+        for (const possibleLink of possibleLinks) {
             if ((connectionsRegExpResults = connectionsRegExp.exec(possibleLink.key)) != null) {
-                let idx = parseInt(connectionsRegExpResults[1]);
+                const idx = parseInt(connectionsRegExpResults[1]);
                 if (!fileMetadata) {
                     fileMetadata = await this.getMetadata(sourceFile) as FrontMatterCache;
                 }
@@ -137,7 +137,7 @@ export default class ConnectionsLocator {
     }
 
     getValidFileFromStringOrNull(name: string): TFile | null {
-        let linkedFile = this.metadataCache.getFirstLinkpathDest(
+        const linkedFile = this.metadataCache.getFirstLinkpathDest(
             stripLink(name),
             ''
         );

@@ -96,8 +96,8 @@ export default class ConnectionManager {
             await this.cp.app.fileManager.processFrontMatter(uc.source, (frontmatter) => {
                 if (frontmatter['connections']) {
                     let pos = 0;
-                    for (let connection of frontmatter['connections']) {
-                        let resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(stripLink(connection['link']), '');
+                    for (const connection of frontmatter['connections']) {
+                        const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(stripLink(connection['link']), '');
                         if (connection['connectionType'] == uc.connectionType && uc.target == resolvedLink) {
                             frontmatter['connections'].splice(pos, 1);
                         }
@@ -117,8 +117,8 @@ export default class ConnectionManager {
                 if (frontmatter[mc.mapProperty]) {
                     if (Array.isArray(frontmatter[mc.mapProperty])) {
                         let pos = 0;
-                        for (let connection of frontmatter[mc.mapProperty]) {
-                            let resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(stripLink(connection), '');
+                        for (const connection of frontmatter[mc.mapProperty]) {
+                            const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(stripLink(connection), '');
                             if (mc.target == resolvedLink) {
                                 frontmatter[mc.mapProperty].splice(pos, 1);
                             }
@@ -155,7 +155,7 @@ export default class ConnectionManager {
     }
 
     async addMappedConnectionType(mt: MappedConnectionType): Promise<boolean> {
-        let index = this.findMappedConnectionType(mt.mapProperty);
+        const index = this.findMappedConnectionType(mt.mapProperty);
         if (index == -1) {
             this.cp.settings.mappedTypes.push({
                 mapProperty: mt.mapProperty,
@@ -169,7 +169,7 @@ export default class ConnectionManager {
     }
 
     async deleteMappedConnectionType(mt: MappedConnectionType) {
-        let index = this.findMappedConnectionType(mt.mapProperty);
+        const index = this.findMappedConnectionType(mt.mapProperty);
         if (index != -1) {
             this.cp.settings.mappedTypes.splice(index, 1);
             await this.cp.saveData(this.cp.settings);
@@ -178,7 +178,7 @@ export default class ConnectionManager {
 
     findMappedConnectionType(mapProperty: string) {
         for (let index = 0; index < this.cp.settings.mappedTypes.length; index++) {
-            let mappedType = this.cp.settings.mappedTypes[index];
+            const mappedType = this.cp.settings.mappedTypes[index];
             if (mappedType.mapProperty == mapProperty) {
                 return index;
             }
@@ -188,7 +188,7 @@ export default class ConnectionManager {
 
     findUnmappedConnectionType(connectionType: string) {
         for (let index = 0; index < this.cp.settings.unmappedTypes.length; index++) {
-            let unmappedType = this.cp.settings.unmappedTypes[index];
+            const unmappedType = this.cp.settings.unmappedTypes[index];
             if (unmappedType.connectionType == connectionType) {
                 return index;
             }

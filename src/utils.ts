@@ -4,7 +4,7 @@
  * @returns {string}
  */
 export function stripLink(link: string) {
-    let linkRegExp = RegExp('\\[?\\[?([^\\[\\]]+)\\]?\\]?');
+    const linkRegExp = RegExp('\\[?\\[?([^\\[\\]]+)\\]?\\]?');
     let linkResults;
     if ((linkResults = linkRegExp.exec(link)) != null) {
         return linkResults[1];

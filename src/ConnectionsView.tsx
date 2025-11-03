@@ -93,8 +93,8 @@ export class ConnectionsView extends ItemView {
 
 class ConnectionsViewContent extends Component<ConnectionsViewContentIFace> {
     render() {
-        let kg = new KeyGenerator();
-        let { connections, ...props } = this.props;
+        const kg = new KeyGenerator();
+        const { connections, ...props } = this.props;
         return <>
             <Table size="small">
                 <TableHead>
@@ -127,7 +127,7 @@ class ConnectionsViewContent extends Component<ConnectionsViewContentIFace> {
 
 class ConnectionLine extends Component<ConnectionLineIFace> {
     render() {
-        let { connection, ...props } = this.props;
+        const { connection, ...props } = this.props;
         let leftItem, rightItem: TFile;
         if ('mapConnectionDirection' in connection && connection.mapConnectionDirection === MappedConnectionDirection.Right) {
             leftItem = connection.target;

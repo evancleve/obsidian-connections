@@ -91,9 +91,9 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
   }
 
   deleteMappedType(mappedType: MappedConnectionType) {
-    let idx = this.state.mappedTypes.indexOf(mappedType);
+    const idx = this.state.mappedTypes.indexOf(mappedType);
     if (idx != -1) {
-      let newMappedTypes = this.state.mappedTypes.map((x) => x);
+      const newMappedTypes = this.state.mappedTypes.map((x) => x);
       newMappedTypes.splice(idx, 1);
       this.setState({ mappedTypes: newMappedTypes });
     }
@@ -101,7 +101,7 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
   }
 
   async addMappedType(mappedType: MappedConnectionType): Promise<boolean> {
-    let result = await this.addFunc(mappedType);
+    const result = await this.addFunc(mappedType);
     if (result) {
       this.setState({})
     }
@@ -160,7 +160,7 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
 
     //No easy validation errors found. Let's try to add it.
     if (!foundError) {
-      let result = await this.actionFunc({ mapProperty: this.state.mapProperty, connectionType: this.state.connectionType, mapConnectionDirection: this.state.mapConnectionDirection });
+      const result = await this.actionFunc({ mapProperty: this.state.mapProperty, connectionType: this.state.connectionType, mapConnectionDirection: this.state.mapConnectionDirection });
       if (result) {
         this.setState({ mapProperty: '', connectionType: '', mapPropertyError: '', connectionTypeError: '' });
       } else {
@@ -256,9 +256,9 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
   }
 
   deleteUnmappedType(unmappedConnectionType: UnmappedConnectionType) {
-    let idx = this.state.unmappedTypes.indexOf(unmappedConnectionType);
+    const idx = this.state.unmappedTypes.indexOf(unmappedConnectionType);
     if (idx != -1) {
-      let newUnmappedTypes = this.state.unmappedTypes.map((x) => x);
+      const newUnmappedTypes = this.state.unmappedTypes.map((x) => x);
       newUnmappedTypes.splice(idx, 1);
       this.setState({ unmappedTypes: newUnmappedTypes });
     }
@@ -266,7 +266,7 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
   }
 
   async addUnmappedType(unmappedConnectionType: UnmappedConnectionType) {
-    let result = await this.addFunc(unmappedConnectionType);
+    const result = await this.addFunc(unmappedConnectionType);
     if (result) {
       this.setState({})
     }
@@ -299,7 +299,7 @@ class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTy
       foundError = true;
     }
     if (!foundError) {
-      let result = await this.actionFunc({ connectionType: this.state.connectionType });
+      const result = await this.actionFunc({ connectionType: this.state.connectionType });
       if (result) {
         this.setState({ connectionType: '', unmappedTypeError: '' });
       } else {

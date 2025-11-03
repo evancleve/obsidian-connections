@@ -56,7 +56,7 @@ export class ConnectionsModal extends Modal {
             } else {
               bond = { source: this.fromFile, target: this.toFile };
             }
-            let connection = Object.assign(bond, { ...this.connectionType })
+            const connection = Object.assign(bond, { ...this.connectionType })
             onSubmit(connection);
           }
           )));
@@ -133,11 +133,11 @@ export class ConnectionTypeSuggestInput extends AbstractInputSuggest<ConnectionT
   }
 
   renderSuggestion(ct: ConnectionType, el: HTMLElement) {
-    let btn = el.createEl('button', 'connection-button')
+    const btn = el.createEl('button', 'connection-button')
     btn.addEventListener('click', (ev: PointerEvent) => {
       ev.stopPropagation();
-      let clickedBtn = ev.currentTarget as HTMLButtonElement;
-      let event = new CustomEvent("removeConnectionType", { bubbles: true, detail: { connectionType: clickedBtn.dataset['connectionType'] } });
+      const clickedBtn = ev.currentTarget as HTMLButtonElement;
+      const event = new CustomEvent("removeConnectionType", { bubbles: true, detail: { connectionType: clickedBtn.dataset['connectionType'] } });
       this.inputEl.dispatchEvent(event);
       clickedBtn.parentElement?.remove();
     });
@@ -167,12 +167,12 @@ class FocusableSetting extends Setting {
   }
 
   identifyYourself(evt: Event): void {
-    let event = new CustomEvent("identifySettingEvent", { bubbles: true, detail: { identity: this } });
+    const event = new CustomEvent("identifySettingEvent", { bubbles: true, detail: { identity: this } });
     this.controlEl.dispatchEvent(event);
   }
 
   focusYourself(): void {
-    let targetControl = this.components[0];
+    const targetControl = this.components[0];
     if (targetControl instanceof SearchComponent) {
       targetControl.inputEl.focus();
     } else if (targetControl instanceof ButtonComponent) {
