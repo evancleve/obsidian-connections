@@ -36,7 +36,7 @@ export default class ConnectionsLocator {
         const backwardConnections: Array<Connection> = [];
         //@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
         const backlinks = this.metadataCache.getBacklinksForFile(target);
-        for (let linkingFilename of backlinks.keys()) {
+        for (const linkingFilename of backlinks.keys()) {
             const source = this.getValidFileFromStringOrNull(linkingFilename);
             if (source) {
                 const frontlinks: Array<FrontmatterLinkCache> | undefined = this.metadataCache.getFileCache(source)?.frontmatterLinks;
@@ -51,8 +51,8 @@ export default class ConnectionsLocator {
 
     getMappedConnectionsFromCache(links: Array<FrontmatterLinkCache>, source: TFile, specificTarget: TFile | null = null): Array<Connection> {
         const mappedConnections: Array<Connection> = [];
-        for (let mappedType of this.settings.mappedTypes) {
-            for (let fl of links) {
+        for (const mappedType of this.settings.mappedTypes) {
+            for (const fl of links) {
                 if (mappedType.mapProperty === fl.key || fl.key.startsWith(mappedType.mapProperty + '.')) {
                     const target = this.getValidFileFromStringOrNull(fl.link);
                     //Bail out if this isn't the target we're looking for.
@@ -73,10 +73,10 @@ export default class ConnectionsLocator {
     async getUnmappedConnectionsFromCache(links: Array<FrontmatterLinkCache>, source: TFile, specificTarget: TFile | null = null): Promise<Array<Connection>> {
         const unmappedIndexes: Array<number> = [];
         const connectionsRegExp = RegExp('^connections\\.([\\d+])\\.link$');
-        for (let fl of links) {
+        for (const fl of links) {
             const result = connectionsRegExp.exec(fl.key);
             if (result) {
-                unmappedIndexes.push(parseInt(result[1]) as number);
+                unmappedIndexes.push(parseInt(result[1]));
             }
         }
         return await this.getUnmappedConnectionsFromFrontmatter(source, unmappedIndexes, specificTarget);

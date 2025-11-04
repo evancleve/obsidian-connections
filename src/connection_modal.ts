@@ -45,7 +45,7 @@ export class ConnectionsModal extends Modal {
               this.connectionType = { connectionType: this.enteredText } as ConnectionType;
               if (!await this.cp.cm.addUnmappedConnectionType(this.connectionType)) {
                 //TODO: error handling
-                console.log('Something went horribly wrong!');
+                console.error('Something went horribly wrong!');
               };
             }
             let bond;

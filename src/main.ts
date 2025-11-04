@@ -36,8 +36,8 @@ export default class ConnectionsPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'add-connections-pane',
-			name: 'Add the Connections pane to the right sidebar',
+			id: 'add-connections-pane', // eslint-disable-line obsidianmd/commands/no-plugin-id-in-command-id
+			name: 'Add the Connections pane to the right sidebar', // eslint-disable-line obsidianmd/ui/sentence-case, obsidianmd/commands/no-plugin-name-in-command-name
 			callback: () => { this.activateView() },
 		});
 
@@ -48,14 +48,14 @@ export default class ConnectionsPlugin extends Plugin {
 
 		this.app.workspace.on('file-open', async file => {
 			if (file) {
-				this.refreshConnectionsView(file);
+				await this.refreshConnectionsView(file);
 			}
 		});
 
 		this.app.workspace.on('active-leaf-change', async leaf => {
 			if (leaf && leaf.view instanceof ConnectionsView) {
 				const file = this.app.workspace.getActiveFile();
-				if (file) this.refreshConnectionsView(file);
+				if (file) await this.refreshConnectionsView(file);
 			}
 		});
 
