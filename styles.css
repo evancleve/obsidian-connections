@@ -6,6 +6,14 @@
   font-weight: bold;
 }
 
+.connections-unresolved {
+  color: var(--link-unresolved-color);
+  opacity: var(--link-unresolved-opacity);
+  filter: var(--link-unresolved-filter);
+  text-decoration-style: var(--link-unresolved-decoration-style);
+  text-decoration-color: var(--link-unresolved-decoration-color);
+}
+
 .same-document {
   text-decoration: underline;
   text-decoration-style: dashed;

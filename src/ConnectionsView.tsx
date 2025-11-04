@@ -12,7 +12,7 @@ import Delete from '@mui/icons-material/Delete';
 
 export const VIEW_TYPE_CONNECTIONS = 'connections-view';
 
-type OpenLinkFunction = (file: TFile) => void;
+type OpenLinkFunction = (file: TFile | string ) => void;
 type DeleteConnectionFunction = (arg: Connection) => void;
 
 interface ConnectionsViewContentIFace {
@@ -29,7 +29,7 @@ interface ConnectionLineIFace {
 }
 
 interface ObsidianLinkIFace {
-    linkFile: TFile;
+    linkFile: TFile | string;
     openFunc: OpenLinkFunction;
     activeFile: TFile;
 }
@@ -128,7 +128,7 @@ class ConnectionsViewContent extends Component<ConnectionsViewContentIFace> {
 class ConnectionLine extends Component<ConnectionLineIFace> {
     render() {
         const { connection, ...props } = this.props;
-        let leftItem, rightItem: TFile;
+        let leftItem, rightItem: TFile | string;
         if ('mapConnectionDirection' in connection && connection.mapConnectionDirection === MappedConnectionDirection.Right) {
             leftItem = connection.target;
             rightItem = connection.source;
@@ -148,14 +148,22 @@ class ConnectionLine extends Component<ConnectionLineIFace> {
 
 class ObsidianLink extends Component<ObsidianLinkIFace> {
     render() {
-        if (this.props.linkFile === this.props.activeFile) {
-            return <span className="same-document">{this.props.linkFile.basename}</span>
+        if (this.props.linkFile instanceof TFile) {
+            if (this.props.linkFile === this.props.activeFile) {
+                return <span className="same-document">{this.props.linkFile.basename}</span>
+            } else {
+                return <a
+                    href={this.props.linkFile.path}
+                    className='internal-link'
+                    onClick={() => { this.props.openFunc(this.props.linkFile) }}
+                >{this.props.linkFile.basename}</a>
+            }
         } else {
-            return <a
-                href={this.props.linkFile.path}
-                className='internal-link'
-                onClick={() => { this.props.openFunc(this.props.linkFile) }}
-            >{this.props.linkFile.basename}</a>
+                return <a
+                    href={this.props.linkFile}
+                    className='connections-unresolved is-unresolved internal-link'
+                    onClick={() => { this.props.openFunc(this.props.linkFile) }}
+                >{this.props.linkFile}</a>
         }
     }
 }

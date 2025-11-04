@@ -55,12 +55,14 @@ export default class ConnectionsLocator {
             for (let fl of links) {
                 if (mappedType.mapProperty === fl.key || fl.key.startsWith(mappedType.mapProperty + '.')) {
                     const target = this.getValidFileFromStringOrNull(fl.link);
-                    if (target) {
-                        //Bail out if this isn't the target we're looking for.
-                        if (specificTarget && target !== specificTarget) {
-                            continue;
-                        }
-                    mappedConnections.push({ ...mappedType, source: source, target: target });
+                    //Bail out if this isn't the target we're looking for.
+                    if (target && specificTarget && target !== specificTarget) {
+                        continue;
+                    } else if (target) {
+                        mappedConnections.push({ ...mappedType, source: source, target: target });
+                    } else if (!specificTarget) {
+                        // We can also add an uncreated file, but only if we aren't looking for a specific target.
+                        mappedConnections.push({ ...mappedType, source: source, target: fl.link });
                     }
                 }
             }

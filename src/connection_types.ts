@@ -45,7 +45,7 @@ export function isMappedConnectionDirection(val: string): boolean {
 
 export type ConnectionBond = {
     source: TFile;
-    target: TFile;
+    target: TFile | string;
 };
 
 export const isConnectionBond = (obj: unknown): obj is ConnectionBond => {

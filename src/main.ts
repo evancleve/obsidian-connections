@@ -95,15 +95,18 @@ export default class ConnectionsPlugin extends Plugin {
 		this.cv.renderConnections(connections, file);
 	}
 
-	openLinkedNote(linkedNote: TFile): void {
+	openLinkedNote(linkedNote: TFile | string): void {
 		//@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
 		const mode = this.app.vault.getConfig("defaultViewMode");
 		const leaf = this.app.workspace.getMostRecentLeaf();
 		if (leaf) {
-			leaf.openFile(
-				linkedNote,
-				{ active: true, mode } as OpenViewState
-			);
+			if (linkedNote instanceof TFile) {
+				leaf.openFile(
+					linkedNote,
+					{ active: true, mode } as OpenViewState
+				);
+			}
+			this.app.workspace.openLinkText(linkedNote as string, '', undefined, { active: true, mode } as OpenViewState)
 		}
 	}
 
