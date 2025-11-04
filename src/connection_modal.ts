@@ -19,7 +19,6 @@ export class ConnectionsModal extends Modal {
     this.connectionTypes = connectionTypes;
     this.settings = [];
     this.contentEl.addEventListener('identifySettingEvent', (evt: CustomEvent) => this.focusOnNextSetting(evt));
-    this.contentEl.addEventListener('removeConnectionType', (evt: CustomEvent) => this.removeConnectionType(evt));
     this.setTitle('Add a connection');
 
     this.settings.push(new FocusableSetting(this.contentEl, 'connection-type')
@@ -74,14 +73,6 @@ export class ConnectionsModal extends Modal {
       }
     }
   }
-
-  /**
-   * In response to an event, call the ConnectionPlugin's removeConnectionType method.
-   * @param {CustomEvent} evt - An event containing the connectionType to remove.
-   */
-  removeConnectionType(evt: CustomEvent) {
-    this.cp.cm.deleteConnectionType(evt.detail.connectionType);
-  }
 }
 
 export class NoteSuggestInput extends AbstractInputSuggest<TFile> {
@@ -133,14 +124,6 @@ export class ConnectionTypeSuggestInput extends AbstractInputSuggest<ConnectionT
   }
 
   renderSuggestion(ct: ConnectionType, el: HTMLElement) {
-    const btn = el.createEl('button', 'connection-button')
-    btn.addEventListener('click', (ev: PointerEvent) => {
-      ev.stopPropagation();
-      const clickedBtn = ev.currentTarget as HTMLButtonElement;
-      const event = new CustomEvent("removeConnectionType", { bubbles: true, detail: { connectionType: clickedBtn.dataset['connectionType'] } });
-      this.inputEl.dispatchEvent(event);
-      clickedBtn.parentElement?.remove();
-    });
     el.createEl('span', { text: ct.connectionType });
 
   }

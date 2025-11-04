@@ -1,11 +1,9 @@
 import {
-    ConfirmedHalfConnection,
     Connection,
     ConnectionsSettings,
     isUnmappedConnectionRecord,
-    MappedConnectionDirection
 } from './connection_types';
-import { FrontMatterCache, MetadataCache, TFile } from 'obsidian';
+import { FrontmatterLinkCache, FrontMatterCache, MetadataCache, TFile } from 'obsidian';
 import { stripLink } from './utils';
 
 export default class ConnectionsLocator {
@@ -19,125 +17,91 @@ export default class ConnectionsLocator {
 
     async getConnections(file: TFile) {
         const connections: Array<Connection> = [];
-        connections.push(...await this.getConnectionsAsSource(file));
-        connections.push(...await this.getConnectionsAsTarget(file));
+        connections.push(...await this.getForwardConnectionsFromCache(file));
+        connections.push(...await this.getBackwardConnectionsFromCache(file));
         return connections;
     }
 
-    async getConnectionsAsSource(file: TFile): Promise<Array<Connection>> {
-        const metadata = await this.getMetadata(file);
-        const sourceConnections: Array<Connection> = [];
-        if (metadata) {
-            // Get the connnections and add the source before returning them as full-fledged Connection variants.
-            sourceConnections.push(...
-                this.getUnmappedConnectionsAsSource(metadata).map((x) => { return { ...x, source: file } })
-            );
-            sourceConnections.push(...
-                this.getMappedConnectionsAsSource(metadata).map((x) => { return { ...x, source: file } })
-            )
+    async getForwardConnectionsFromCache(source: TFile): Promise<Array<Connection>> {
+        const forwardConnections: Array<Connection> = [];
+        const frontlinks: Array<FrontmatterLinkCache> | undefined = this.metadataCache.getFileCache(source)?.frontmatterLinks;
+        if (frontlinks) {
+            forwardConnections.push(...this.getMappedConnectionsFromCache(frontlinks, source));
+            forwardConnections.push(...await this.getUnmappedConnectionsFromCache(frontlinks, source));
         }
-        return sourceConnections;
+        return forwardConnections;
     }
 
-    getUnmappedConnectionsAsSource(metadata: Record<string, string>): Array<ConfirmedHalfConnection> {
-        const foundUnmappedConnections: Array<ConfirmedHalfConnection> = [];
-        const possibleUnmappedConnections = metadata['connections']
-        if (possibleUnmappedConnections) {
-            for (const possibleConnection of possibleUnmappedConnections) {
-                if (!isUnmappedConnectionRecord(possibleConnection)) {
+    async getBackwardConnectionsFromCache(target: TFile) {
+        const backwardConnections: Array<Connection> = [];
+        //@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
+        const backlinks = this.metadataCache.getBacklinksForFile(target);
+        for (let linkingFilename of backlinks.keys()) {
+            const source = this.getValidFileFromStringOrNull(linkingFilename);
+            if (source) {
+                const frontlinks: Array<FrontmatterLinkCache> | undefined = this.metadataCache.getFileCache(source)?.frontmatterLinks;
+                if (frontlinks) {
+                    backwardConnections.push(...this.getMappedConnectionsFromCache(frontlinks, source, target));
+                    backwardConnections.push(...await this.getUnmappedConnectionsFromCache(frontlinks, source, target));
+                }
+            }
+        }
+        return backwardConnections
+    }
+
+    getMappedConnectionsFromCache(links: Array<FrontmatterLinkCache>, source: TFile, specificTarget: TFile | null = null): Array<Connection> {
+        const mappedConnections: Array<Connection> = [];
+        for (let mappedType of this.settings.mappedTypes) {
+            for (let fl of links) {
+                if (mappedType.mapProperty === fl.key || fl.key.startsWith(mappedType.mapProperty + '.')) {
+                    const target = this.getValidFileFromStringOrNull(fl.link);
+                    if (target) {
+                        //Bail out if this isn't the target we're looking for.
+                        if (specificTarget && target !== specificTarget) {
+                            continue;
+                        }
+                    mappedConnections.push({ ...mappedType, source: source, target: target });
+                    }
+                }
+            }
+        }
+        return mappedConnections;
+    }
+
+    async getUnmappedConnectionsFromCache(links: Array<FrontmatterLinkCache>, source: TFile, specificTarget: TFile | null = null): Promise<Array<Connection>> {
+        const unmappedIndexes: Array<number> = [];
+        const connectionsRegExp = RegExp('^connections\\.([\\d+])\\.link$');
+        for (let fl of links) {
+            const result = connectionsRegExp.exec(fl.key);
+            if (result) {
+                unmappedIndexes.push(parseInt(result[1]) as number);
+            }
+        }
+        return await this.getUnmappedConnectionsFromFrontmatter(source, unmappedIndexes, specificTarget);
+    }
+
+    async getUnmappedConnectionsFromFrontmatter(source: TFile, indexes: Array<number>, specificTarget: TFile | null = null): Promise<Array<Connection>> {
+        const unmappedConnections: Array<Connection> = [];
+        const metadata: FrontMatterCache | null = await this.getMetadata(source);
+        if (metadata && 'connections' in metadata) {
+            for (const idx of indexes) {
+                if (!isUnmappedConnectionRecord(metadata.connections[idx])) {
                     continue;
                 }
-                const linkedFile = this.getValidFileFromStringOrNull(possibleConnection.link);
+                const linkedFile = this.getValidFileFromStringOrNull(metadata.connections[idx].link);
                 if (linkedFile) {
-                    foundUnmappedConnections.push({
-                        connectionType: possibleConnection.connectionType,
+                    if (specificTarget && linkedFile !== specificTarget) {
+                        continue;
+                    }
+                    unmappedConnections.push({
+                        source: source,
+                        connectionType: metadata.connections[idx].connectionType,
                         target: linkedFile
                     })
                 }
             }
         }
-        return foundUnmappedConnections;
-    }
-
-    getMappedConnectionsAsSource(metadata: Record<string, string>): Array<ConfirmedHalfConnection> {
-        const foundMappedConnections: Array<ConfirmedHalfConnection> = [];
-        for (const mappedType of this.settings.mappedTypes) {
-            if (mappedType.mapProperty in metadata) {
-                //Convert a non-array property to an array for the upcoming loop.
-                let entries;
-                if (Array.isArray(metadata[mappedType.mapProperty])) {
-                    entries = metadata[mappedType.mapProperty]
-                } else {
-                    entries = [metadata[mappedType.mapProperty]]
-                }
-                for (const entry of entries) {
-                    const linkedFile = this.getValidFileFromStringOrNull(entry);
-                    if (linkedFile) {
-                        foundMappedConnections.push({
-                            connectionType: mappedType.connectionType,
-                            target: linkedFile,
-                            mapConnectionDirection: mappedType.mapConnectionDirection,
-                            mapProperty: mappedType.mapProperty
-                        })
-                    }
-                }
-            }
-        }
-        return foundMappedConnections;
-    }
-
-    async getConnectionsAsTarget(targetFile: TFile): Promise<Array<Connection>> {
-        const foundConnections: Array<Connection> = [];
-        //@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
-        const backlinks = this.metadataCache.getBacklinksForFile(targetFile);
-        for (const linkingFileName of backlinks.keys()) {
-            const sourceFile = this.getValidFileFromStringOrNull(linkingFileName)
-            if (!sourceFile) {
-                continue;
-            }
-            const possibleLinks = backlinks.get(linkingFileName)
-            foundConnections.push(...this.getMappedConnectionsAsTargetFromFile(sourceFile, targetFile, possibleLinks));
-            foundConnections.push(...await this.getUnmappedConnectionsAsTargetFromFile(sourceFile, targetFile, possibleLinks));
-        }
-        return foundConnections;
-    }
-
-    getMappedConnectionsAsTargetFromFile(sourceFile: TFile, targetFile: TFile, possibleLinks: Array<{ key: string }>): Array<Connection> {
-        const foundMappedConnections: Array<Connection> = [];
-        for (const possibleLink of possibleLinks) {
-            //Screwing around with maps, filters, and ternary expressions. Probably at the expense of readability!
-            const foundMappedTypes = this.settings.mappedTypes.map((mt) => RegExp(`^${mt.mapProperty}\\.?`).test(possibleLink.key) ? mt : null).filter((val) => val != null);
-            for (const fmt of foundMappedTypes) {
-                if (fmt && fmt.connectionType as string && fmt.mapProperty as string && fmt.mapConnectionDirection as MappedConnectionDirection) {
-                    foundMappedConnections.push({
-                        source: sourceFile,
-                        target: targetFile,
-                        connectionType: fmt.connectionType,
-                        mapProperty: fmt.mapProperty,
-                        mapConnectionDirection: fmt.mapConnectionDirection
-                    });
-                }
-            }
-        }
-        return foundMappedConnections;
-    }
-
-    async getUnmappedConnectionsAsTargetFromFile(sourceFile: TFile, targetFile: TFile, possibleLinks: Array<{ key: string }>): Promise<Array<Connection>> {
-        const foundUnmappedConnections: Array<Connection> = [];
-        const connectionsRegExp = RegExp('connections\\.(\\d+)');
-        let fileMetadata: FrontMatterCache | null = null;
-        let connectionsRegExpResults;
-        for (const possibleLink of possibleLinks) {
-            if ((connectionsRegExpResults = connectionsRegExp.exec(possibleLink.key)) != null) {
-                const idx = parseInt(connectionsRegExpResults[1]);
-                if (!fileMetadata) {
-                    fileMetadata = await this.getMetadata(sourceFile) as FrontMatterCache;
-                }
-                foundUnmappedConnections.push({ source: sourceFile, target: targetFile, connectionType: fileMetadata.connections[idx].connectionType })
-            }
-        }
-        return foundUnmappedConnections;
-
+        return unmappedConnections;
     }
 
     getValidFileFromStringOrNull(name: string): TFile | null {

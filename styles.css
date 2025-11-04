@@ -1,55 +1,15 @@
-.connections {
-  box-sizing: border-box;
-  display: block;
-  font-family: "Scaly Sans", "Segoe UI", Arial, sans-serif;
+.connections-table-content {
+  padding-left: 1em;
 }
 
-.connection-line {
-  display: block;
-  font-size: 1em;
-  border-bottom: 1px solid #555;
-  padding: 5px 5px;
-}
-
-.connection-button {
-  display: inline;
-  height: 1em;
-  padding: 0;
-  border: 0;
-  background-size: contain;
-  aspect-ratio: 1/1;
-  background-image: url("data:image/svg+xml;charset=UTF-8,<svg viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='50%' cy='50%' r='48%' stroke='black' stroke-width='2.5%' fill='none' /><path d='M 20,20,80,80 M 20,80,80,20' stroke='black' stroke-width='5%' stroke-linecap='round' /></svg>");
-  background-repeat: no-repeat;
-  float: inline-start;
-  margin-inline-end: 1em;
-  margin-top: 0.25em;
-
+.connections-settings-table-header {
+  font-weight: bold;
 }
 
 .same-document {
   text-decoration: underline;
   text-decoration-style: dashed;
   text-underline-offset: 3px;
-}
-
-.connections-internal-link {
-  cursor: pointer;
-}
-
-/* .connections-settings-revert {
-  all: initial;
-} */
-
-#input-mapDirection {
-  min-width: 6ch;
-}
-
-.connections-table-content {
-  padding-left: 1em;
-}
-
-.unmapped-connections-table {
-  margin-top: 3em;
 }
 
 .section-divider {
@@ -72,6 +32,6 @@
   top: -13px;
 }
 
-.connections-settings-table-header {
-  font-weight: bold;
+.unmapped-connections-table {
+  margin-top: 3em;
 }

@@ -22,7 +22,7 @@ export function isMappedConnectionType(obj: unknown): obj is MappedConnectionTyp
         ('mapConnectionDirection' in obj) && (isMappedConnectionDirection(obj.mapConnectionDirection as string))
 }
 
-export type ConnectionType = UnmappedConnection | MappedConnectionType;
+export type ConnectionType = UnmappedConnectionType | MappedConnectionType;
 
 export function isConnectionType(obj: unknown): obj is ConnectionType {
     return isUnmappedConnectionType(obj) || isMappedConnectionType(obj);
@@ -79,11 +79,4 @@ export type UnmappedConnectionRecord = {
 
 export const isUnmappedConnectionRecord = (obj: unknown): obj is UnmappedConnectionRecord => {
     return isAnObjectWithProperties(obj) && ('connectionType' in obj) && ('link' in obj) && (obj.connectionType != '')
-}
-
-export type ConfirmedHalfConnection = {
-    connectionType: string;
-    target: TFile;
-    mapProperty?: string;
-    mapConnectionDirection?: MappedConnectionDirection;
 }
