@@ -12,7 +12,7 @@ import Delete from '@mui/icons-material/Delete';
 
 export const VIEW_TYPE_CONNECTIONS = 'connections-view';
 
-type OpenLinkFunction = (file: TFile | string ) => void;
+type OpenLinkFunction = (file: TFile | string) => void;
 type DeleteConnectionFunction = (arg: Connection) => void;
 
 interface ConnectionsViewContentIFace {
@@ -65,18 +65,20 @@ export class ConnectionsView extends ItemView {
         return 'lucide-handshake';
     }
 
-    async onOpen() {
+    async onOpen(): Promise<void> {
         const container = this.contentEl;
         container.empty();
         container.createEl('h4', { text: 'Connections' });
         this.root = createRoot(container.createEl('div'));
+        await Promise.resolve();
     }
 
-    async onClose() {
+    async onClose(): Promise<void> {
         if (this.root) {
             this.root.unmount();
             this.root = null;
         }
+        await Promise.resolve();
     }
 
     renderConnections(connections: Array<Connection>, activeFile: TFile) {
@@ -159,11 +161,11 @@ class ObsidianLink extends Component<ObsidianLinkIFace> {
                 >{this.props.linkFile.basename}</a>
             }
         } else {
-                return <a
-                    href={this.props.linkFile}
-                    className='connections-unresolved is-unresolved internal-link'
-                    onClick={() => { this.props.openFunc(this.props.linkFile) }}
-                >{this.props.linkFile}</a>
+            return <a
+                href={this.props.linkFile}
+                className='connections-unresolved is-unresolved internal-link'
+                onClick={() => { this.props.openFunc(this.props.linkFile) }}
+            >{this.props.linkFile}</a>
         }
     }
 }

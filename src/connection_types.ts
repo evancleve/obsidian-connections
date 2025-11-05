@@ -1,6 +1,6 @@
 import { TFile } from 'obsidian';
 
-export function isAnObjectWithProperties (obj: unknown) {
+export function isAnObjectWithProperties(obj: unknown) {
     return (typeof obj === 'object') && (obj != null)
 }
 
@@ -19,7 +19,7 @@ export type MappedConnectionType = UnmappedConnectionType & {
 export function isMappedConnectionType(obj: unknown): obj is MappedConnectionType {
     return isAnObjectWithProperties(obj) && ('connectionType' in obj) && (obj.connectionType != '') &&
         ('mapProperty' in obj) && (obj.mapProperty != '') &&
-        ('mapConnectionDirection' in obj) && (isMappedConnectionDirection(obj.mapConnectionDirection as string))
+        ('mapConnectionDirection' in obj) && (isMappedConnectionDirection(obj.mapConnectionDirection as MappedConnectionDirection))
 }
 
 export type ConnectionType = UnmappedConnectionType | MappedConnectionType;
@@ -33,7 +33,7 @@ export enum MappedConnectionDirection {
     Right = "right"
 };
 
-export function isMappedConnectionDirection(val: string): boolean {
+export function isMappedConnectionDirection(val: MappedConnectionDirection): boolean {
     switch (val) {
         case MappedConnectionDirection.Left:
         case MappedConnectionDirection.Right:
@@ -44,13 +44,13 @@ export function isMappedConnectionDirection(val: string): boolean {
 }
 
 export type ConnectionBond = {
-    source: TFile;
+    source: TFile | string;
     target: TFile | string;
 };
 
 export const isConnectionBond = (obj: unknown): obj is ConnectionBond => {
-    return isAnObjectWithProperties(obj) && ('source' in obj) && (obj.source instanceof TFile) &&
-        ('target' in obj) && (obj.target instanceof TFile)
+    return isAnObjectWithProperties(obj) && ('source' in obj) && (obj.source instanceof TFile || typeof obj.source === 'string') &&
+        ('target' in obj) && (obj.target instanceof TFile || typeof obj.target === 'string')
 }
 
 export type MappedConnection = MappedConnectionType & ConnectionBond;

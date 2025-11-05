@@ -15,24 +15,24 @@ export default class ConnectionsLocator {
         this.metadataCache = metadataCache;
     }
 
-    async getConnections(file: TFile) {
+    getConnections(file: TFile): Array<Connection> {
         const connections: Array<Connection> = [];
-        connections.push(...await this.getForwardConnectionsFromCache(file));
-        connections.push(...await this.getBackwardConnectionsFromCache(file));
+        connections.push(...this.getForwardConnectionsFromCache(file));
+        connections.push(...this.getBackwardConnectionsFromCache(file));
         return connections;
     }
 
-    async getForwardConnectionsFromCache(source: TFile): Promise<Array<Connection>> {
+    getForwardConnectionsFromCache(source: TFile): Array<Connection> {
         const forwardConnections: Array<Connection> = [];
         const frontlinks: Array<FrontmatterLinkCache> | undefined = this.metadataCache.getFileCache(source)?.frontmatterLinks;
         if (frontlinks) {
             forwardConnections.push(...this.getMappedConnectionsFromCache(frontlinks, source));
-            forwardConnections.push(...await this.getUnmappedConnectionsFromCache(frontlinks, source));
+            forwardConnections.push(...this.getUnmappedConnectionsFromCache(frontlinks, source));
         }
         return forwardConnections;
     }
 
-    async getBackwardConnectionsFromCache(target: TFile) {
+    getBackwardConnectionsFromCache(target: TFile): Array<Connection> {
         const backwardConnections: Array<Connection> = [];
         //@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
         const backlinks = this.metadataCache.getBacklinksForFile(target);
@@ -42,7 +42,7 @@ export default class ConnectionsLocator {
                 const frontlinks: Array<FrontmatterLinkCache> | undefined = this.metadataCache.getFileCache(source)?.frontmatterLinks;
                 if (frontlinks) {
                     backwardConnections.push(...this.getMappedConnectionsFromCache(frontlinks, source, target));
-                    backwardConnections.push(...await this.getUnmappedConnectionsFromCache(frontlinks, source, target));
+                    backwardConnections.push(...this.getUnmappedConnectionsFromCache(frontlinks, source, target));
                 }
             }
         }
@@ -70,7 +70,7 @@ export default class ConnectionsLocator {
         return mappedConnections;
     }
 
-    async getUnmappedConnectionsFromCache(links: Array<FrontmatterLinkCache>, source: TFile, specificTarget: TFile | null = null): Promise<Array<Connection>> {
+    getUnmappedConnectionsFromCache(links: Array<FrontmatterLinkCache>, source: TFile, specificTarget: TFile | null = null): Array<Connection> {
         const unmappedIndexes: Array<number> = [];
         const connectionsRegExp = RegExp('^connections\\.([\\d+])\\.link$');
         for (const fl of links) {
@@ -79,28 +79,30 @@ export default class ConnectionsLocator {
                 unmappedIndexes.push(parseInt(result[1]));
             }
         }
-        return await this.getUnmappedConnectionsFromFrontmatter(source, unmappedIndexes, specificTarget);
+        return this.getUnmappedConnectionsFromFrontmatter(source, unmappedIndexes, specificTarget);
     }
 
-    async getUnmappedConnectionsFromFrontmatter(source: TFile, indexes: Array<number>, specificTarget: TFile | null = null): Promise<Array<Connection>> {
+    getUnmappedConnectionsFromFrontmatter(source: TFile, indexes: Array<number>, specificTarget: TFile | null = null): Array<Connection> {
         const unmappedConnections: Array<Connection> = [];
-        const metadata: FrontMatterCache | null = await this.getMetadata(source);
+        const metadata: FrontMatterCache | null = this.getMetadata(source);
         if (metadata && 'connections' in metadata) {
             for (const idx of indexes) {
                 if (!isUnmappedConnectionRecord(metadata.connections[idx])) {
                     continue;
                 }
-                const linkedFile = this.getValidFileFromStringOrNull(metadata.connections[idx].link);
-                if (linkedFile) {
-                    if (specificTarget && linkedFile !== specificTarget) {
-                        continue;
-                    }
-                    unmappedConnections.push({
-                        source: source,
-                        connectionType: metadata.connections[idx].connectionType,
-                        target: linkedFile
-                    })
+                let linkedFile: TFile | string | null;
+                linkedFile = this.getValidFileFromStringOrNull(metadata.connections[idx].link);
+                if (specificTarget && linkedFile !== specificTarget) {
+                    continue;
                 }
+                if (!linkedFile) {
+                    linkedFile = stripLink(metadata.connections[idx].link);
+                }
+                unmappedConnections.push({
+                    source: source,
+                    connectionType: metadata.connections[idx].connectionType,
+                    target: linkedFile
+                })
             }
         }
         return unmappedConnections;
@@ -122,7 +124,7 @@ export default class ConnectionsLocator {
      * @param {TFile} file - The selected file
      * @returns {CachedMetadata}
      */
-    async getMetadata(file: TFile): Promise<FrontMatterCache | null> {
+    getMetadata(file: TFile): FrontMatterCache | null {
         const fileCache = this.metadataCache.getFileCache(file);
         return fileCache?.frontmatter || null;
     }

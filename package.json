@@ -7,7 +7,7 @@
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"lint": "npx --node-options='--experimental-strip-types' eslint --flag unstable_native_nodejs_ts_config"
+		"lint": "npx --node-options='--experimental-strip-types' eslint --flag unstable_native_nodejs_ts_config ./src"
 	},
 	"keywords": [],
 	"author": "Eric Van Cleve",
@@ -24,6 +24,7 @@
 		"eslint-plugin-obsidianmd": "^0.1.6",
 		"globals": "^16.5.0",
 		"obsidian": "latest",
+		"obsidian-typings": "^4.58.0",
 		"tslib": "2.4.0",
 		"typescript": "^4.7.4"
 	},

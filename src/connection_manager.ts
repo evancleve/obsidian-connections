@@ -9,7 +9,8 @@ import {
     UnmappedConnectionType
 } from './connection_types';
 import ConnectionsPlugin from './main';
-import { stripLink } from './utils';
+import { stripLink, textOrFileToLinktext } from './utils';
+import { TFile } from 'obsidian';
 
 export default class ConnectionManager {
     cp: ConnectionsPlugin
@@ -28,14 +29,16 @@ export default class ConnectionManager {
     }
 
     async addUnmappedConnection(uc: UnmappedConnection) {
-        if (uc.source) {
+        // For unmapped connections, the source will always be a valid TFile by definition, 
+        // but the typedef include strings as an option, so narrow this.
+        if (uc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(uc.source, (frontmatter) => {
                 if (!frontmatter['connections']) {
                     frontmatter['connections'] = [];
                 }
                 frontmatter['connections'].push({
                     'connectionType': uc.connectionType,
-                    'link': `[[${this.cp.app.metadataCache.fileToLinktext(uc.target, '')}]]`
+                    'link': `[[${textOrFileToLinktext(this.cp, uc.target)}]]`
                 })
             });
             //TODO: add the reordering connection types, use copyWithin?
@@ -52,7 +55,16 @@ export default class ConnectionManager {
     }
 
     async addMappedConnection(mc: MappedConnection) {
-        if (mc.source) {
+        if (typeof mc.source === "string") {
+            let filename;
+            if (mc.source.substring(mc.source.length - 3).toLowerCase().endsWith('.md')) {
+                filename = mc.source
+            } else {
+                filename = mc.source + '.md';
+            }
+            mc.source = await this.cp.app.vault.create(filename, '');
+        }
+        if (mc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(mc.source, (frontmatter) => {
                 if (!frontmatter[mc.mapProperty]) {
                     frontmatter[mc.mapProperty] = [];
@@ -61,7 +73,7 @@ export default class ConnectionManager {
                 if (!Array.isArray(frontmatter[mc.mapProperty])) {
                     frontmatter[mc.mapProperty] = [frontmatter[mc.mapProperty]];
                 }
-                frontmatter[mc.mapProperty].push(`[[${this.cp.app.metadataCache.fileToLinktext(mc.target, '')}]]`)
+                frontmatter[mc.mapProperty].push(`[[${textOrFileToLinktext(this.cp, mc.target)}]]`)
             });
         }
     }
@@ -82,6 +94,7 @@ export default class ConnectionManager {
         }
     }
 
+    // TODO: handle unresolved deletions (mapped + unmapped)
     async deleteConnection(connection: Connection) {
         if (isMappedConnection(connection)) {
             return await this.deleteMappedConnection(connection);
@@ -92,7 +105,7 @@ export default class ConnectionManager {
     }
 
     async deleteUnmappedConnection(uc: Connection) {
-        if (uc.source) {
+        if (uc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(uc.source, (frontmatter) => {
                 if (frontmatter['connections']) {
                     let pos = 0;
@@ -112,7 +125,7 @@ export default class ConnectionManager {
     }
 
     async deleteMappedConnection(mc: MappedConnection) {
-        if (mc.source) {
+        if (mc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(mc.source, (frontmatter) => {
                 if (frontmatter[mc.mapProperty]) {
                     if (Array.isArray(frontmatter[mc.mapProperty])) {
@@ -136,7 +149,6 @@ export default class ConnectionManager {
     }
 
     async addUnmappedConnectionType(umt: UnmappedConnectionType): Promise<boolean> {
-        if (umt.connectionType === 'hahaha') return false;
         const index = this.findUnmappedConnectionType(umt.connectionType);
         if (index == -1) {
             this.cp.settings.unmappedTypes.push(umt);

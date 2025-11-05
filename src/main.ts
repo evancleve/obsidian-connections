@@ -9,105 +9,109 @@ import { ConnectionsView, VIEW_TYPE_CONNECTIONS } from './ConnectionsView';
 
 export default class ConnectionsPlugin extends Plugin {
 
-	settings: ConnectionsSettings;
-	cm: ConnectionsManager;
-	cl: ConnectionsLocator;
-	cv: ConnectionsView;
+    settings: ConnectionsSettings;
+    cm: ConnectionsManager;
+    cl: ConnectionsLocator;
 
-	async onload(): Promise<void> {
+    async onload(): Promise<void> {
 
-		this.addSettingTab(new ConnectionsSettingTab(this));
-		this.settings = await this.loadData();
-		if (!this.settings) {
-			this.settings = {unmappedTypes: [], mappedTypes:[]}
-		}
-		this.cm = new ConnectionsManager(this);
-		this.cl = new ConnectionsLocator(this.settings, this.app.metadataCache);
+        this.addSettingTab(new ConnectionsSettingTab(this));
+        this.settings = await this.loadData();
+        if (!this.settings) {
+            this.settings = { unmappedTypes: [], mappedTypes: [] }
+        }
+        this.cm = new ConnectionsManager(this);
+        this.cl = new ConnectionsLocator(this.settings, this.app.metadataCache);
 
-		this.addCommand({
-			id: 'add-connection',
-			name: 'Add connection to another note',
-			callback: () => {
-				const currentFile = this.app.workspace.getActiveFile();
-				if (currentFile) {
-					new ConnectionsModal(this, currentFile, this.getAllConnectionTypes(), (result: Connection) => this.cm.addConnection(result)).open()
-				}
-			},
-		});
+        this.addCommand({
+            id: 'add-connection',
+            name: 'Add connection to another note',
+            callback: () => {
+                const currentFile = this.app.workspace.getActiveFile();
+                if (currentFile) {
+                    new ConnectionsModal(this,
+                        currentFile,
+                        this.getAllConnectionTypes(),
+                        (result: Connection) => void this.cm.addConnection(result))
+                        .open()
+                }
+            },
+        });
 
-		this.addCommand({
-			id: 'add-connections-pane', // eslint-disable-line obsidianmd/commands/no-plugin-id-in-command-id
-			name: 'Add the Connections pane to the right sidebar', // eslint-disable-line obsidianmd/ui/sentence-case, obsidianmd/commands/no-plugin-name-in-command-name
-			callback: () => { this.activateView() },
-		});
+        this.addCommand({
+            id: 'add-pane',
+            name: 'Add the pane to the right sidebar',
+            callback: async () => { await this.activateView() },
+        });
 
-		this.registerView(
-			VIEW_TYPE_CONNECTIONS,
-			(leaf) => this.cv = new ConnectionsView({ leaf: leaf, openLinkFunc: this.openLinkedNote.bind(this), deleteConnectionFunc: this.cm.deleteConnection.bind(this.cm) }));
-		this.app.workspace.onLayoutReady(() => { this.activateView() });
+        this.registerView(
+            VIEW_TYPE_CONNECTIONS,
+            (leaf) => new ConnectionsView({ leaf: leaf, openLinkFunc: this.openLinkedNote.bind(this), deleteConnectionFunc: this.cm.deleteConnection.bind(this.cm) }));
+        this.app.workspace.onLayoutReady(async () => { await this.activateView() });
 
-		this.app.workspace.on('file-open', async file => {
-			if (file) {
-				await this.refreshConnectionsView(file);
-			}
-		});
+        this.app.workspace.on('file-open', file => {
+            if (file) {
+                this.refreshConnectionsView(file);
+            }
+        });
 
-		this.app.workspace.on('active-leaf-change', async leaf => {
-			if (leaf && leaf.view instanceof ConnectionsView) {
-				const file = this.app.workspace.getActiveFile();
-				if (file) await this.refreshConnectionsView(file);
-			}
-		});
+        this.app.workspace.on('active-leaf-change', leaf => {
+            if (leaf && leaf.view instanceof ConnectionsView) {
+                const file = this.app.workspace.getActiveFile();
+                if (file) this.refreshConnectionsView(file);
+            }
+        });
 
-		this.app.metadataCache.on('changed', (file, data, cache) => {
-			// Figure out how to only do this when the active file is the one in view.
-			this.refreshConnectionsView(file);
-		});
-	}
+        this.app.metadataCache.on('changed', (file, data, cache) => {
+            // Figure out how to only do this when the active file is the one in view.
+            this.refreshConnectionsView(file);
+        });
+    }
 
-	getAllConnectionTypes(): Array<ConnectionType> {
-		return this.settings.unmappedTypes.concat(this.settings.mappedTypes) as Array<ConnectionType>
-	}
+    getAllConnectionTypes(): Array<ConnectionType> {
+        return this.settings.unmappedTypes.concat(this.settings.mappedTypes) as Array<ConnectionType>
+    }
 
-	async onunload(): Promise<void> {
-		//unload stuff here
-	}
+    // TODO: Implement any necessary unloading.
+    // async onunload(): Promise<void> {
+    // }
 
-	async activateView() {
-		let leaf: WorkspaceLeaf | null = null;
-		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CONNECTIONS);
-		if (leaves.length > 0) {
-			// A leaf with our view already exists, use that
-			leaf = leaves[0];
-		} else {
-			// Our view could not be found in the workspace, create a new leaf
-			// in the right sidebar for it
-			leaf = this.app.workspace.getRightLeaf(false) as WorkspaceLeaf;
-			await leaf.setViewState({ type: VIEW_TYPE_CONNECTIONS, active: false });
-		}
-	}
+    async activateView() {
+        let leaf: WorkspaceLeaf | null = null;
+        const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CONNECTIONS);
+        if (leaves.length > 0) {
+            // A leaf with our view already exists, use that
+            leaf = leaves[0];
+        } else {
+            // Our view could not be found in the workspace, create a new leaf
+            // in the right sidebar for it
+            leaf = this.app.workspace.getRightLeaf(false) as WorkspaceLeaf;
+            await leaf.setViewState({ type: VIEW_TYPE_CONNECTIONS, active: false });
+        }
+    }
 
-	async refreshConnectionsView(file: TFile) {
-		if (!this.cv) {
-			return;
-		}
-		const connections = await this.cl.getConnections(file);
-		this.cv.renderConnections(connections, file);
-	}
+    refreshConnectionsView(file: TFile) {
+        this.app.workspace.getLeavesOfType(VIEW_TYPE_CONNECTIONS).forEach((leaf) => {
+            if (leaf.view instanceof ConnectionsView) {
+                const connections = this.cl.getConnections(file);
+                leaf.view.renderConnections(connections, file);
+            }
+        });
+    }
 
-	openLinkedNote(linkedNote: TFile | string): void {
-		//@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
-		const mode = this.app.vault.getConfig("defaultViewMode");
-		const leaf = this.app.workspace.getMostRecentLeaf();
-		if (leaf) {
-			if (linkedNote instanceof TFile) {
-				leaf.openFile(
-					linkedNote,
-					{ active: true, mode } as OpenViewState
-				);
-			}
-			this.app.workspace.openLinkText(linkedNote as string, '', undefined, { active: true, mode } as OpenViewState)
-		}
-	}
+    async openLinkedNote(linkedNote: TFile | string): Promise<void> {
+        //@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
+        const mode = this.app.vault.getConfig("defaultViewMode");
+        const leaf = this.app.workspace.getMostRecentLeaf();
+        if (leaf) {
+            if (linkedNote instanceof TFile) {
+                await leaf.openFile(
+                    linkedNote,
+                    { active: true, mode } as OpenViewState
+                );
+            }
+            await this.app.workspace.openLinkText(linkedNote as string, '', undefined, { active: true, mode } as OpenViewState)
+        }
+    }
 
 }

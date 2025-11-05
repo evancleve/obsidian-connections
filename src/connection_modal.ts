@@ -1,13 +1,14 @@
 import { AbstractInputSuggest, ButtonComponent, Modal, SearchComponent, Setting, TFile } from 'obsidian';
 import type ConnectionsPlugin from './main';
-import { Connection, ConnectionType, MappedConnectionDirection } from './connection_types'
+import { Connection, ConnectionType, MappedConnectionDirection, isConnectionType } from './connection_types'
 
 export class ConnectionsModal extends Modal {
   private cp: ConnectionsPlugin;
-  public fromFile: TFile;
-  public toFile: TFile;
+  public fromFile: TFile | string;
+  public toFile: TFile | string | undefined;
   public connectionType: ConnectionType;
   public enteredText: string;
+  public enteredFilePath: string;
   public connectionTypes: Array<ConnectionType>
   private settings: Array<FocusableSetting>;
 
@@ -41,13 +42,28 @@ export class ConnectionsModal extends Modal {
           .onClick(async () => {
             this.close();
             //If a connection type isn't already selected, add the contents of the input box as a new unmapped connection type.
-            if (!this.connectionType) {
-              this.connectionType = { connectionType: this.enteredText } as ConnectionType;
-              if (!await this.cp.cm.addUnmappedConnectionType(this.connectionType)) {
-                //TODO: error handling
-                console.error('Something went horribly wrong!');
-              };
+            if (!isConnectionType(this.connectionType)) {
+              if (this.enteredText) {
+                this.connectionType = { connectionType: this.enteredText } as ConnectionType;
+                if (!await this.cp.cm.addUnmappedConnectionType(this.connectionType)) {
+                  //TODO: error handling
+                  console.error('Something went horribly wrong!');
+                };
+              } else {
+                console.error('Connection type can\'t be blank!');
+                return;
+              }
             }
+
+            if (!(this.toFile instanceof TFile)) {
+              if (this.enteredFilePath) {
+                this.toFile = this.enteredFilePath;
+              } else {
+                console.error('File path can\'t be blank!');
+                return;
+              }
+            }
+
             let bond;
             // Right-mapped connections need the source and target flipped!
             if ('mapConnectionDirection' in this.connectionType && this.connectionType.mapConnectionDirection == MappedConnectionDirection.Right) {
@@ -55,7 +71,7 @@ export class ConnectionsModal extends Modal {
             } else {
               bond = { source: this.fromFile, target: this.toFile };
             }
-            const connection = Object.assign(bond, { ...this.connectionType })
+            const connection = Object.assign(bond, { ...this.connectionType });
             onSubmit(connection);
           }
           )));
@@ -106,6 +122,12 @@ export class NoteSuggestInput extends AbstractInputSuggest<TFile> {
     this.cm.toFile = selectedFile;
     this.inputEl.dispatchEvent(new CustomEvent('suggestionSelectedEvent', { bubbles: true }));
     this.close();
+  }
+
+  getValue(): string {
+    this.cm.toFile = undefined;
+    this.cm.enteredFilePath = super.getValue();
+    return super.getValue();
   }
 }
 

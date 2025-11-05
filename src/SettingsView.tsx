@@ -202,7 +202,7 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
           </Select>
         </TableCell>
         <TableCell align="right">
-          <AddButton actionFunc={() => { this.handleAddButtonClick() }} />
+          <AddButton actionFunc={() => { void this.handleAddButtonClick() }} />
         </TableCell>
       </TableRow>
     </>
@@ -243,7 +243,7 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row" >
-                <span style={{ marginLeft: '0.5em' }}>{unmappedConnectionType.connectionType}</span>
+                <span style={{ marginInlineStart: '0.5em' }}>{unmappedConnectionType.connectionType}</span>
               </TableCell>
               <TableCell align="right">
                 <DeleteButton actionFunc={(arg: UnmappedConnectionType) => { this.deleteUnmappedType(arg) }} connectionType={unmappedConnectionType} />
@@ -322,7 +322,7 @@ class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTy
             onChange={this.handleTypeChange.bind(this)} />
         </TableCell>
         <TableCell align="right">
-          <AddButton actionFunc={() => { this.handleAddButtonClick() }} />
+          <AddButton actionFunc={() => { void this.handleAddButtonClick() }} />
         </TableCell>
       </TableRow>
     </>

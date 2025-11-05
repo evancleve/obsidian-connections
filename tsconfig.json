@@ -17,9 +17,13 @@
       "ES5",
       "ES6",
       "ES7"
+    ],
+    "types": [
+      "obsidian-typings"
     ]
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"]
+    "**/*.tsx"
+  ]
 }
