@@ -1,6 +1,6 @@
 import { TFile } from 'obsidian';
 
-export function isAnObjectWithProperties(obj: unknown) {
+export function isAnObjectWithProperties(obj: unknown): obj is object {
     return (typeof obj === 'object') && (obj != null)
 }
 
