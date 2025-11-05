@@ -1,6 +1,6 @@
 import { ItemView, TFile, WorkspaceLeaf } from 'obsidian';
 import { Root, createRoot } from 'react-dom/client';
-import { Connection, MappedConnectionDirection } from './connection_types';
+import { Connection, MappedConnectionSubject } from './connection_types';
 import { Component } from 'react';
 import Button from '@mui/material/Button';
 import Table from '@mui/material/Table';
@@ -130,19 +130,19 @@ class ConnectionsViewContent extends Component<ConnectionsViewContentIFace> {
 class ConnectionLine extends Component<ConnectionLineIFace> {
     render() {
         const { connection, ...props } = this.props;
-        let leftItem, rightItem: TFile | string;
-        if ('mapConnectionDirection' in connection && connection.mapConnectionDirection === MappedConnectionDirection.Right) {
-            leftItem = connection.target;
-            rightItem = connection.source;
+        let subjectItem, objectItem: TFile | string;
+        if ('mapConnectionSubject' in connection && connection.mapConnectionSubject === MappedConnectionSubject.Target) {
+            subjectItem = connection.target;
+            objectItem = connection.source;
         } else {
-            leftItem = connection.source;
-            rightItem = connection.target;
+            subjectItem = connection.source;
+            objectItem = connection.target;
         }
         return <>
             <div>
-                <span><ObsidianLink linkFile={leftItem} {...props} /></span>
+                <span><ObsidianLink linkFile={subjectItem} {...props} /></span>
                 <span> {this.props.connection.connectionType} </span>
-                <span><ObsidianLink linkFile={rightItem} {...props} /></span>
+                <span><ObsidianLink linkFile={objectItem} {...props} /></span>
             </div>
         </>
     }

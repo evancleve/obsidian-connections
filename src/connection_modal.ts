@@ -1,6 +1,6 @@
 import { AbstractInputSuggest, ButtonComponent, Modal, SearchComponent, Setting, TFile } from 'obsidian';
 import type ConnectionsPlugin from './main';
-import { Connection, ConnectionType, MappedConnectionDirection, isConnectionType } from './connection_types'
+import { Connection, ConnectionType, MappedConnectionSubject, isConnectionType } from './connection_types'
 
 export class ConnectionsModal extends Modal {
   private cp: ConnectionsPlugin;
@@ -65,8 +65,8 @@ export class ConnectionsModal extends Modal {
             }
 
             let bond;
-            // Right-mapped connections need the source and target flipped!
-            if ('mapConnectionDirection' in this.connectionType && this.connectionType.mapConnectionDirection == MappedConnectionDirection.Right) {
+            // Target-mapped connections need the source and target flipped!
+            if ('mapConnectionSubject' in this.connectionType && this.connectionType.mapConnectionSubject == MappedConnectionSubject.Target) {
               bond = { source: this.toFile, target: this.fromFile };
             } else {
               bond = { source: this.fromFile, target: this.toFile };

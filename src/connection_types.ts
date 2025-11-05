@@ -8,18 +8,18 @@ export type UnmappedConnectionType = { connectionType: string; };
 
 export function isUnmappedConnectionType(obj: unknown): obj is MappedConnectionType {
     return isAnObjectWithProperties(obj) && ('connectionType' in obj) && (obj.connectionType != '') &&
-        !('mapProperty' in obj) && !('mapConnectionDirection' in obj) && !('mapConnectionDirection' in obj)
+        !('mapProperty' in obj) && !('mapConnectionSubject' in obj)
 }
 
 export type MappedConnectionType = UnmappedConnectionType & {
     mapProperty: string;
-    mapConnectionDirection: MappedConnectionDirection;
+    mapConnectionSubject: MappedConnectionSubject;
 };
 
 export function isMappedConnectionType(obj: unknown): obj is MappedConnectionType {
     return isAnObjectWithProperties(obj) && ('connectionType' in obj) && (obj.connectionType != '') &&
         ('mapProperty' in obj) && (obj.mapProperty != '') &&
-        ('mapConnectionDirection' in obj) && (isMappedConnectionDirection(obj.mapConnectionDirection as MappedConnectionDirection))
+        ('mapConnectionSubject' in obj) && (isMappedConnectionSubject(obj.mapConnectionSubject as MappedConnectionSubject))
 }
 
 export type ConnectionType = UnmappedConnectionType | MappedConnectionType;
@@ -28,15 +28,16 @@ export function isConnectionType(obj: unknown): obj is ConnectionType {
     return isUnmappedConnectionType(obj) || isMappedConnectionType(obj);
 }
 
-export enum MappedConnectionDirection {
-    Left = "left",
-    Right = "right"
+//export enum MappedConnectionSugject {
+export enum MappedConnectionSubject {
+    Source = "source",
+    Target = "target"
 };
 
-export function isMappedConnectionDirection(val: MappedConnectionDirection): boolean {
+export function isMappedConnectionSubject(val: MappedConnectionSubject): boolean {
     switch (val) {
-        case MappedConnectionDirection.Left:
-        case MappedConnectionDirection.Right:
+        case MappedConnectionSubject.Source:
+        case MappedConnectionSubject.Target:
             return true;
         default:
             return false;

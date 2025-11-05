@@ -173,7 +173,7 @@ export default class ConnectionManager {
             this.cp.settings.mappedTypes.push({
                 mapProperty: mt.mapProperty,
                 connectionType: mt.connectionType,
-                mapConnectionDirection: mt.mapConnectionDirection
+                mapConnectionSubject: mt.mapConnectionSubject
             });
             await this.cp.saveData(this.cp.settings);
             return true;

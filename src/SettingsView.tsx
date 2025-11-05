@@ -1,4 +1,4 @@
-import { ConnectionsSettings, MappedConnectionType, MappedConnectionDirection, UnmappedConnectionType } from './connection_types';
+import { ConnectionsSettings, MappedConnectionType, MappedConnectionSubject, UnmappedConnectionType } from './connection_types';
 import { Component } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -51,12 +51,11 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
     this.deleteFunc = props.deleteFunc;
     this.addFunc = props.addFunc;
     this.state = {
-      mappedTypes: props.settings.mappedTypes
+      mappedTypes: [...props.settings.mappedTypes]
     };
   }
 
   render() {
-
     return <>
       <h3>Mapped Connection Types</h3>
       <Table size="small">
@@ -64,7 +63,7 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
           <TableRow>
             <TableCell><span className="connections-settings-table-header">Connection Type</span></TableCell>
             <TableCell><span className="connections-settings-table-header">Frontmatter Property</span></TableCell>
-            <TableCell><span className="connections-settings-table-header">Direction</span></TableCell>
+            <TableCell><span className="connections-settings-table-header">Subject</span></TableCell>
             <TableCell><span className="connections-settings-table-header">Controls</span></TableCell>
           </TableRow>
         </TableHead>
@@ -79,7 +78,7 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
                 <span className="connections-table-content">{mappedType.connectionType}</span>
               </TableCell>
               <TableCell><span className="connections-table-content">{mappedType.mapProperty}</span></TableCell>
-              <TableCell align="left"><span className="connections-table-content">{mappedType.mapConnectionDirection}</span></TableCell>
+              <TableCell align="left"><span className="connections-table-content">{mappedType.mapConnectionSubject}</span></TableCell>
               <TableCell align="right">
                 <DeleteButton actionFunc={(arg: MappedConnectionType) => { this.deleteMappedType(arg) }} connectionType={mappedType} />
               </TableCell>
@@ -103,7 +102,9 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
   async addMappedType(mappedType: MappedConnectionType): Promise<boolean> {
     const result = await this.addFunc(mappedType);
     if (result) {
-      this.setState({})
+      const newMappedTypes = this.state.mappedTypes.map((x) => x);
+      newMappedTypes.push(mappedType);
+      this.setState({ mappedTypes: newMappedTypes });
     }
     return result;
   }
@@ -123,7 +124,7 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
     this.state = {
       connectionType: '',
       mapProperty: '',
-      mapConnectionDirection: MappedConnectionDirection.Left,
+      mapConnectionSubject: MappedConnectionSubject.Source,
       mapPropertyError: '',
       connectionTypeError: ''
     };
@@ -137,8 +138,8 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
     this.setState({ connectionType: evt.target.value });
   }
 
-  handleDirectionChange(evt: React.ChangeEvent<HTMLInputElement>) {
-    this.setState({ mapConnectionDirection: evt.target.value as MappedConnectionDirection });
+  handleSubjectChange(evt: React.ChangeEvent<HTMLInputElement>) {
+    this.setState({ mapConnectionSubject: evt.target.value as MappedConnectionSubject });
   }
 
   async handleAddButtonClick() {
@@ -160,7 +161,7 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
 
     //No easy validation errors found. Let's try to add it.
     if (!foundError) {
-      const result = await this.actionFunc({ mapProperty: this.state.mapProperty, connectionType: this.state.connectionType, mapConnectionDirection: this.state.mapConnectionDirection });
+      const result = await this.actionFunc({ mapProperty: this.state.mapProperty, connectionType: this.state.connectionType, mapConnectionSubject: this.state.mapConnectionSubject });
       if (result) {
         this.setState({ mapProperty: '', connectionType: '', mapPropertyError: '', connectionTypeError: '' });
       } else {
@@ -192,13 +193,13 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
         </TableCell>
         <TableCell>
           <Select
-            id="input-mapDirection"
+            id="input-mapSubject"
             size="small"
             autoWidth={true}
-            value={this.state.mapConnectionDirection}
-            onChange={this.handleDirectionChange.bind(this)}>
-            <MenuItem value={MappedConnectionDirection.Left}>{MappedConnectionDirection.Left}</MenuItem>
-            <MenuItem value={MappedConnectionDirection.Right}>{MappedConnectionDirection.Right}</MenuItem>
+            value={this.state.mapConnectionSubject}
+            onChange={this.handleSubjectChange.bind(this)}>
+            <MenuItem value={MappedConnectionSubject.Source}>{MappedConnectionSubject.Source}</MenuItem>
+            <MenuItem value={MappedConnectionSubject.Target}>{MappedConnectionSubject.Target}</MenuItem>
           </Select>
         </TableCell>
         <TableCell align="right">
@@ -221,7 +222,7 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
     super(props);
     this.deleteFunc = props.deleteFunc;
     this.addFunc = props.addFunc;
-    this.state = { unmappedTypes: props.settings.unmappedTypes };
+    this.state = { unmappedTypes: [...props.settings.unmappedTypes] };
   }
 
   render() {
@@ -268,7 +269,9 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
   async addUnmappedType(unmappedConnectionType: UnmappedConnectionType) {
     const result = await this.addFunc(unmappedConnectionType);
     if (result) {
-      this.setState({})
+      const newUnmappedTypes = this.state.unmappedTypes.map((x) => x);
+      newUnmappedTypes.push(unmappedConnectionType);
+      this.setState({ unmappedTypes: newUnmappedTypes })
     }
     return result;
   }
