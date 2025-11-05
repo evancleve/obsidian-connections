@@ -109,8 +109,9 @@ export default class ConnectionsPlugin extends Plugin {
                     linkedNote,
                     { active: true, mode } as OpenViewState
                 );
+                return;
             }
-            await this.app.workspace.openLinkText(linkedNote as string, '', undefined, { active: true, mode } as OpenViewState)
+            await this.app.workspace.openLinkText(linkedNote, '', undefined, { active: true, mode } as OpenViewState)
         }
     }
 
