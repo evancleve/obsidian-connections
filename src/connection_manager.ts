@@ -94,7 +94,6 @@ export default class ConnectionManager {
         }
     }
 
-    // TODO: handle unresolved deletions (mapped + unmapped)
     async deleteConnection(connection: Connection) {
         if (isMappedConnection(connection)) {
             return await this.deleteMappedConnection(connection);
@@ -110,8 +109,9 @@ export default class ConnectionManager {
                 if (frontmatter['connections']) {
                     let pos = 0;
                     for (const connection of frontmatter['connections']) {
-                        const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(stripLink(connection['link']), '');
-                        if (connection['connectionType'] == uc.connectionType && uc.target == resolvedLink) {
+                        const strippedLink = stripLink(connection['link']);
+                        const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
+                        if (connection['connectionType'] == uc.connectionType && (uc.target == resolvedLink || uc.target == strippedLink)) {
                             frontmatter['connections'].splice(pos, 1);
                         }
                         pos++;
@@ -131,8 +131,9 @@ export default class ConnectionManager {
                     if (Array.isArray(frontmatter[mc.mapProperty])) {
                         let pos = 0;
                         for (const connection of frontmatter[mc.mapProperty]) {
-                            const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(stripLink(connection), '');
-                            if (mc.target == resolvedLink) {
+                            const strippedLink = stripLink(connection);
+                            const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
+                            if (mc.target == resolvedLink || mc.target == strippedLink) {
                                 frontmatter[mc.mapProperty].splice(pos, 1);
                             }
                             pos++;
