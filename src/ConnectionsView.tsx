@@ -1,6 +1,7 @@
 import { ItemView, TFile, WorkspaceLeaf } from 'obsidian';
 import { Root, createRoot } from 'react-dom/client';
 import { Connection, MappedConnectionSubject } from './connection_types';
+import { obsidianTheme } from './utils';
 import { Component } from 'react';
 import Button from '@mui/material/Button';
 import Table from '@mui/material/Table';
@@ -9,6 +10,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import Delete from '@mui/icons-material/Delete';
+import { ThemeProvider } from '@mui/material/styles';
 
 export const VIEW_TYPE_CONNECTIONS = 'connections-view';
 
@@ -84,11 +86,13 @@ export class ConnectionsView extends ItemView {
     renderConnections(connections: Array<Connection>, activeFile: TFile) {
         if (!this.root) return;
         this.root.render(
-            <ConnectionsViewContent
-                connections={connections}
-                activeFile={activeFile}
-                openFunc={this.openLinkFunc}
-                deleteConnectionFunc={this.deleteConnectionFunc} />
+            <ThemeProvider theme={obsidianTheme}>
+                <ConnectionsViewContent
+                    connections={connections}
+                    activeFile={activeFile}
+                    openFunc={this.openLinkFunc}
+                    deleteConnectionFunc={this.deleteConnectionFunc} />
+            </ThemeProvider>
         )
     }
 }

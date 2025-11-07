@@ -1,5 +1,6 @@
 import ConnectionsPlugin from './main';
 import { TFile } from 'obsidian';
+import { createTheme } from '@mui/material/styles';
 
 /**
  * Removes [[]]]] from a file link, if required.
@@ -19,3 +20,29 @@ export function stripLink(link: string) {
 export function textOrFileToLinktext(cp: ConnectionsPlugin, file: TFile | string): string {
     return file instanceof TFile ? cp.app.metadataCache.fileToLinktext(file, '') : file;
 }
+
+const styleProperties = {
+    borderColor: 'inherit',
+    caretColor: 'inherit',
+    color: 'inherit',
+    cursor: 'inherit',
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
+    outlineColor: 'inherit'
+}
+
+const inheritStyles = {
+    styleOverrides: {
+        root: {...styleProperties, "&.Mui-active": {styleProperties}},
+        hover: styleProperties,
+        focus: styleProperties,
+    },
+}
+
+export const obsidianTheme = createTheme({
+    components: {
+        MuiTableCell: inheritStyles,
+        MuiSelect: inheritStyles,
+        MuiInput: inheritStyles,
+    },
+});

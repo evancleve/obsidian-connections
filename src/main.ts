@@ -69,13 +69,13 @@ export default class ConnectionsPlugin extends Plugin {
         // When mapped connections get deleted from the target's view, we don't trigger a
         // refresh via resolve or file-open, so we need a custom event.
         // @ts-ignore
-        this.app.workspace.on('connection-delete', async (data: { source: TFile, target: TFile | string }) => {
+        this.app.workspace.on('connection-delete', (data: { source: TFile, target: TFile | string }) => {
             const activeFile = this.app.workspace.getActiveFile();
             if (activeFile === data.target) this.nextResolve = data.source;
         });
 
         this.app.workspace.onLayoutReady(async () => { await this.activateView() });
-        this.app.workspace.onLayoutReady(async () => {
+        this.app.workspace.onLayoutReady(() => {
             this.app.metadataCache.on('resolve', (resolvedFile) => {
                 const activeFile = this.app.workspace.getActiveFile();
                 if (!activeFile) return;
