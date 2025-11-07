@@ -1,4 +1,5 @@
 import { ConnectionsSettings, MappedConnectionType, MappedConnectionSubject, UnmappedConnectionType } from './connection_types';
+import { obsidianTheme } from './utils';
 import { Component } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -12,6 +13,7 @@ import TableCell from '@mui/material/TableCell';
 import TextField from '@mui/material/TextField';
 import Add from '@mui/icons-material/Add';
 import Delete from '@mui/icons-material/Delete';
+import { ThemeProvider } from '@mui/material/styles';
 
 
 export interface SettingsIface {
@@ -27,13 +29,15 @@ export class SettingsView extends Component<SettingsIface> {
 
   render() {
     return <>
-      <Box component="section">
-        <MappedConnectionsTable {...this.props} />
-      </Box>
-      <hr className="section-divider" />
-      <Box component="section" className="unmapped-connections-table">
-        <UnmappedConnectionsTable {...this.props} />
-      </Box>
+      <ThemeProvider theme={obsidianTheme}>
+        <Box component="section">
+          <MappedConnectionsTable {...this.props} />
+        </Box>
+        <hr className="section-divider" />
+        <Box component="section" className="unmapped-connections-table">
+          <UnmappedConnectionsTable {...this.props} />
+        </Box>
+      </ThemeProvider>
     </>
   }
 }
