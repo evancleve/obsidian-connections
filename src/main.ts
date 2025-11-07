@@ -12,6 +12,7 @@ export default class ConnectionsPlugin extends Plugin {
     settings: ConnectionsSettings;
     cm: ConnectionsManager;
     cl: ConnectionsLocator;
+    nextResolve: TFile | undefined = undefined;
 
     async onload(): Promise<void> {
 
@@ -46,8 +47,11 @@ export default class ConnectionsPlugin extends Plugin {
 
         this.registerView(
             VIEW_TYPE_CONNECTIONS,
-            (leaf) => new ConnectionsView({ leaf: leaf, openLinkFunc: this.openLinkedNote.bind(this), deleteConnectionFunc: this.cm.deleteConnection.bind(this.cm) }));
-        this.app.workspace.onLayoutReady(async () => { await this.activateView() });
+            (leaf) => new ConnectionsView({
+                leaf: leaf,
+                openLinkFunc: this.openLinkedNote.bind(this),
+                deleteConnectionFunc: this.cm.deleteConnection.bind(this.cm)
+            }));
 
         this.app.workspace.on('file-open', file => {
             if (file) {
@@ -62,9 +66,40 @@ export default class ConnectionsPlugin extends Plugin {
             }
         });
 
-        this.app.metadataCache.on('changed', (file, data, cache) => {
-            // Figure out how to only do this when the active file is the one in view.
-            this.refreshConnectionsView(file);
+        // When mapped connections get deleted from the target's view, we don't trigger a
+        // refresh via resolve or file-open, so we need a custom event.
+        // @ts-ignore
+        this.app.workspace.on('connection-delete', async (data: { source: TFile, target: TFile | string }) => {
+            const activeFile = this.app.workspace.getActiveFile();
+            if (activeFile === data.target) this.nextResolve = data.source;
+        });
+
+        this.app.workspace.onLayoutReady(async () => { await this.activateView() });
+        this.app.workspace.onLayoutReady(async () => {
+            this.app.metadataCache.on('resolve', (resolvedFile) => {
+                const activeFile = this.app.workspace.getActiveFile();
+                if (!activeFile) return;
+                if (activeFile === resolvedFile) {
+                    this.refreshConnectionsView(activeFile);
+                    return;
+                }
+
+                if (this.nextResolve && resolvedFile === this.nextResolve) {
+                    this.refreshConnectionsView(activeFile);
+                    this.nextResolve = undefined;
+                    return;
+                }
+
+                const resolvedMetadata = this.app.metadataCache.getFileCache(resolvedFile);
+                if (resolvedMetadata && resolvedMetadata.frontmatterLinks) {
+                    const activeFileLinkText = this.app.metadataCache.fileToLinktext(activeFile, '');
+                    for (const fmLink of resolvedMetadata.frontmatterLinks) {
+                        if (fmLink.link === activeFileLinkText) {
+                            this.refreshConnectionsView(activeFile);
+                        }
+                    }
+                }
+            });
         });
     }
 
@@ -114,5 +149,4 @@ export default class ConnectionsPlugin extends Plugin {
             await this.app.workspace.openLinkText(linkedNote, '', undefined, { active: true, mode } as OpenViewState)
         }
     }
-
 }

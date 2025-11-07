@@ -96,9 +96,13 @@ export default class ConnectionManager {
 
     async deleteConnection(connection: Connection) {
         if (isMappedConnection(connection)) {
-            return await this.deleteMappedConnection(connection);
+            await this.deleteMappedConnection(connection);
+            this.cp.app.workspace.trigger('connection-delete', { source: connection.source, target: connection.target });
+            return;
         } else if (isUnmappedConnection(connection)) {
-            return await this.deleteUnmappedConnection(connection);
+            await this.deleteUnmappedConnection(connection);
+            this.cp.app.workspace.trigger('connection-delete', { source: connection.source, target: connection.target });
+            return;
         }
         console.error('Can\'t find a type for this connection: ', connection);
     }
