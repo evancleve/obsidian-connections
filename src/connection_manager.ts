@@ -10,7 +10,7 @@ import {
 } from './connection_types';
 import ConnectionsPlugin from './main';
 import { stripLink, textOrFileToLinktext } from './utils';
-import { TFile } from 'obsidian';
+import { Notice, TFile } from 'obsidian';
 
 export default class ConnectionManager {
     cp: ConnectionsPlugin
@@ -26,6 +26,7 @@ export default class ConnectionManager {
             return await this.addUnmappedConnection(connection);
         }
         console.error('Can\'t find a type for this connection: ', connection);
+        return void new Notice('Can\'t find a type for this connection!');
     }
 
     async addUnmappedConnection(uc: UnmappedConnection) {
@@ -41,16 +42,6 @@ export default class ConnectionManager {
                     'link': `[[${textOrFileToLinktext(this.cp, uc.target)}]]`
                 })
             });
-            //TODO: add the reordering connection types, use copyWithin?
-            //     // If the last connectionType we used isn't at the front of the list, move it there.
-            //     const index = this.findUnmappedConnectionType(connectionType);
-            //     if (index == 0) {
-            //         return;
-            //     } else if (index > 0) {
-            //         this.cp.settings.unmappedTypes.splice(index, 1);
-            //     }
-            //     this.cp.settings.unmappedTypes.unshift({ connectionType: connectionType })
-            //     await this.cp.saveData(this.cp.settings);
         }
     }
 
@@ -105,6 +96,7 @@ export default class ConnectionManager {
             return;
         }
         console.error('Can\'t find a type for this connection: ', connection);
+        return void new Notice('Can\'t find a type for this connection!');
     }
 
     async deleteUnmappedConnection(uc: Connection) {
@@ -129,15 +121,24 @@ export default class ConnectionManager {
     }
 
     async deleteMappedConnection(mc: MappedConnection) {
+        let foundProperty: boolean = false;
+        let foundConnection: boolean = false;
+        let foundObject: boolean = false;
         if (mc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(mc.source, (frontmatter) => {
                 if (frontmatter[mc.mapProperty]) {
+                    foundProperty = true;
                     if (Array.isArray(frontmatter[mc.mapProperty])) {
                         let pos = 0;
                         for (const connection of frontmatter[mc.mapProperty]) {
+                            if (typeof (connection) === 'object') {
+                                foundObject = true;
+                                break;
+                            }
                             const strippedLink = stripLink(connection);
                             const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
                             if (mc.target == resolvedLink || mc.target == strippedLink) {
+                                foundConnection = true;
                                 frontmatter[mc.mapProperty].splice(pos, 1);
                             }
                             pos++;
@@ -146,11 +147,25 @@ export default class ConnectionManager {
                             delete frontmatter[mc.mapProperty];
                         }
                     } else {
-                        delete frontmatter[mc.mapProperty];
+                        if (typeof (frontmatter[mc.mapProperty]) === 'object') {
+                            foundObject = true;
+                        } else {
+                            foundConnection = true;
+                            delete frontmatter[mc.mapProperty];
+                        }
                     }
                 }
             });
         }
+        if (!foundProperty) {
+            console.error('Can\'t find the connection\'s mapped property in this note!', mc);
+            void new Notice('Can\'t find the connection\'s mapped property in this note!');
+        }
+        if (foundObject) {
+            console.error('Can\'t delete this connection, as it is embedded in an object.', mc);
+            void new Notice('Can\'t delete this connection, as it is embedded in an object.');
+        }
+        return foundConnection;
     }
 
     async addUnmappedConnectionType(umt: UnmappedConnectionType): Promise<boolean> {

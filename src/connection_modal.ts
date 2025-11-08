@@ -1,4 +1,4 @@
-import { AbstractInputSuggest, ButtonComponent, Modal, SearchComponent, Setting, TFile } from 'obsidian';
+import { AbstractInputSuggest, ButtonComponent, Modal, Notice, SearchComponent, Setting, TFile } from 'obsidian';
 import type ConnectionsPlugin from './main';
 import { Connection, ConnectionType, MappedConnectionSubject, isConnectionType } from './connection_types'
 
@@ -40,18 +40,15 @@ export class ConnectionsModal extends Modal {
           .setButtonText('Add connection')
           .setCta()
           .onClick(async () => {
-            this.close();
             //If a connection type isn't already selected, add the contents of the input box as a new unmapped connection type.
             if (!isConnectionType(this.connectionType)) {
               if (this.enteredText) {
                 this.connectionType = { connectionType: this.enteredText } as ConnectionType;
                 if (!await this.cp.cm.addUnmappedConnectionType(this.connectionType)) {
-                  //TODO: error handling
-                  console.error('Something went horribly wrong!');
+                  return void new Notice('Unable to add new unmapped connection type!');
                 };
               } else {
-                console.error('Connection type can\'t be blank!');
-                return;
+                return void new Notice('Connection type can\'t be blank!');
               }
             }
 
@@ -59,8 +56,7 @@ export class ConnectionsModal extends Modal {
               if (this.enteredFilePath) {
                 this.toFile = this.enteredFilePath;
               } else {
-                console.error('File path can\'t be blank!');
-                return;
+                return void new Notice('File path can\'t be blank!');
               }
             }
 
@@ -73,6 +69,7 @@ export class ConnectionsModal extends Modal {
             }
             const connection = Object.assign(bond, { ...this.connectionType });
             onSubmit(connection);
+            this.close();
           }
           )));
 
