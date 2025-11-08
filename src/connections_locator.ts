@@ -100,7 +100,7 @@ export default class ConnectionsLocator {
                 }
                 unmappedConnections.push({
                     source: source,
-                    connectionType: metadata.connections[idx].connectionType,
+                    connectionText: metadata.connections[idx].connectionText,
                     target: linkedFile
                 })
             }

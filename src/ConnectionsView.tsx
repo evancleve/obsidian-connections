@@ -145,7 +145,7 @@ class ConnectionLine extends Component<ConnectionLineIFace> {
         return <>
             <div>
                 <span><ObsidianLink linkFile={subjectItem} {...props} /></span>
-                <span> {this.props.connection.connectionType} </span>
+                <span> {this.props.connection.connectionText} </span>
                 <span><ObsidianLink linkFile={objectItem} {...props} /></span>
             </div>
         </>

@@ -22,8 +22,8 @@ export class ConnectionsModal extends Modal {
     this.contentEl.addEventListener('identifySettingEvent', (evt: CustomEvent) => this.focusOnNextSetting(evt));
     this.setTitle('Add a connection');
 
-    this.settings.push(new FocusableSetting(this.contentEl, 'connection-type')
-      .setName('Connection type')
+    this.settings.push(new FocusableSetting(this.contentEl, 'connection-text')
+      .setName('Connection text')
       .addSearch((text) => {
         new ConnectionTypeSuggestInput(cp, this, text.inputEl);
       }));
@@ -43,12 +43,12 @@ export class ConnectionsModal extends Modal {
             //If a connection type isn't already selected, add the contents of the input box as a new unmapped connection type.
             if (!isConnectionType(this.connectionType)) {
               if (this.enteredText) {
-                this.connectionType = { connectionType: this.enteredText } as ConnectionType;
+                this.connectionType = { connectionText: this.enteredText } as ConnectionType;
                 if (!await this.cp.cm.addUnmappedConnectionType(this.connectionType)) {
                   return void new Notice('Unable to add new unmapped connection type!');
                 };
               } else {
-                return void new Notice('Connection type can\'t be blank!');
+                return void new Notice('Connection text can\'t be blank!');
               }
             }
 
@@ -139,17 +139,17 @@ export class ConnectionTypeSuggestInput extends AbstractInputSuggest<ConnectionT
   }
 
   getSuggestions(query: string): ConnectionType[] {
-    return this.cm.connectionTypes.filter((ct) => { return ct.connectionType.includes(query) }).map((ct) => ct);
+    return this.cm.connectionTypes.filter((ct) => { return ct.connectionText.includes(query) }).map((ct) => ct);
   }
 
   renderSuggestion(ct: ConnectionType, el: HTMLElement) {
-    el.createEl('span', { text: ct.connectionType });
+    el.createEl('span', { text: ct.connectionText });
 
   }
 
-  selectSuggestion(selectedConnection: ConnectionType): void {
-    this.inputEl.value = selectedConnection.connectionType;
-    this.cm.connectionType = selectedConnection
+  selectSuggestion(selectedConnectionType: ConnectionType): void {
+    this.inputEl.value = selectedConnectionType.connectionText;
+    this.cm.connectionType = selectedConnectionType
     this.inputEl.dispatchEvent(new CustomEvent('suggestionSelectedEvent', { bubbles: true }));
     this.close();
   }

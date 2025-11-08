@@ -4,10 +4,10 @@ export function isAnObjectWithProperties(obj: unknown): obj is object {
     return (typeof obj === 'object') && (obj != null)
 }
 
-export type UnmappedConnectionType = { connectionType: string; };
+export type UnmappedConnectionType = { connectionText: string; };
 
 export function isUnmappedConnectionType(obj: unknown): obj is MappedConnectionType {
-    return isAnObjectWithProperties(obj) && ('connectionType' in obj) && (obj.connectionType != '') &&
+    return isAnObjectWithProperties(obj) && ('connectionText' in obj) && (obj.connectionText != '') &&
         !('mapProperty' in obj) && !('mapConnectionSubject' in obj)
 }
 
@@ -17,7 +17,7 @@ export type MappedConnectionType = UnmappedConnectionType & {
 };
 
 export function isMappedConnectionType(obj: unknown): obj is MappedConnectionType {
-    return isAnObjectWithProperties(obj) && ('connectionType' in obj) && (obj.connectionType != '') &&
+    return isAnObjectWithProperties(obj) && ('connectionText' in obj) && (obj.connectionText != '') &&
         ('mapProperty' in obj) && (obj.mapProperty != '') &&
         ('mapConnectionSubject' in obj) && (isMappedConnectionSubject(obj.mapConnectionSubject as MappedConnectionSubject))
 }
@@ -74,10 +74,10 @@ export type ConnectionsSettings = {
 };
 
 export type UnmappedConnectionRecord = {
-    connectionType: string;
+    connectionText: string;
     link: string;
 }
 
 export const isUnmappedConnectionRecord = (obj: unknown): obj is UnmappedConnectionRecord => {
-    return isAnObjectWithProperties(obj) && ('connectionType' in obj) && ('link' in obj) && (obj.connectionType != '')
+    return isAnObjectWithProperties(obj) && ('connectionText' in obj) && ('link' in obj) && (obj.connectionText != '')
 }

@@ -38,7 +38,7 @@ export default class ConnectionManager {
                     frontmatter['connections'] = [];
                 }
                 frontmatter['connections'].push({
-                    'connectionType': uc.connectionType,
+                    'connectionText': uc.connectionText,
                     'link': `[[${textOrFileToLinktext(this.cp, uc.target)}]]`
                 })
             });
@@ -107,7 +107,7 @@ export default class ConnectionManager {
                     for (const connection of frontmatter['connections']) {
                         const strippedLink = stripLink(connection['link']);
                         const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
-                        if (connection['connectionType'] == uc.connectionType && (uc.target == resolvedLink || uc.target == strippedLink)) {
+                        if (connection['connectionText'] == uc.connectionText && (uc.target == resolvedLink || uc.target == strippedLink)) {
                             frontmatter['connections'].splice(pos, 1);
                         }
                         pos++;
@@ -169,7 +169,7 @@ export default class ConnectionManager {
     }
 
     async addUnmappedConnectionType(umt: UnmappedConnectionType): Promise<boolean> {
-        const index = this.findUnmappedConnectionType(umt.connectionType);
+        const index = this.findUnmappedConnectionType(umt.connectionText);
         if (index == -1) {
             this.cp.settings.unmappedTypes.push(umt);
             await this.cp.saveData(this.cp.settings);
@@ -179,7 +179,7 @@ export default class ConnectionManager {
     }
 
     async deleteUnmappedConnectionType(umt: UnmappedConnectionType) {
-        const index = this.findUnmappedConnectionType(umt.connectionType);
+        const index = this.findUnmappedConnectionType(umt.connectionText);
         if (index > -1) {
             this.cp.settings.unmappedTypes.splice(index, 1);
             await this.cp.saveData(this.cp.settings);
@@ -191,7 +191,7 @@ export default class ConnectionManager {
         if (index == -1) {
             this.cp.settings.mappedTypes.push({
                 mapProperty: mt.mapProperty,
-                connectionType: mt.connectionType,
+                connectionText: mt.connectionText,
                 mapConnectionSubject: mt.mapConnectionSubject
             });
             await this.cp.saveData(this.cp.settings);
@@ -218,10 +218,10 @@ export default class ConnectionManager {
         return -1;
     }
 
-    findUnmappedConnectionType(connectionType: string) {
+    findUnmappedConnectionType(connectionText: string) {
         for (let index = 0; index < this.cp.settings.unmappedTypes.length; index++) {
             const unmappedType = this.cp.settings.unmappedTypes[index];
-            if (unmappedType.connectionType == connectionType) {
+            if (unmappedType.connectionText == connectionText) {
                 return index;
             }
         }

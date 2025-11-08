@@ -65,7 +65,7 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell><span className="connections-settings-table-header">Connection Type</span></TableCell>
+            <TableCell><span className="connections-settings-table-header">Connection Text</span></TableCell>
             <TableCell><span className="connections-settings-table-header">Frontmatter Property</span></TableCell>
             <TableCell><span className="connections-settings-table-header">Subject</span></TableCell>
             <TableCell><span className="connections-settings-table-header">Controls</span></TableCell>
@@ -79,7 +79,7 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row" >
-                <span className="connections-table-content">{mappedType.connectionType}</span>
+                <span className="connections-table-content">{mappedType.connectionText}</span>
               </TableCell>
               <TableCell><span className="connections-table-content">{mappedType.mapProperty}</span></TableCell>
               <TableCell align="left"><span className="connections-table-content">{mappedType.mapConnectionSubject}</span></TableCell>
@@ -116,7 +116,7 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
 
 type MappedTypeFormState = MappedConnectionType & {
   mapPropertyError: string,
-  connectionTypeError: string
+  connectionTextError: string
 }
 
 class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFormState> {
@@ -126,11 +126,11 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
     super(props);
     this.actionFunc = props.actionFunc;
     this.state = {
-      connectionType: '',
+      connectionText: '',
       mapProperty: '',
       mapConnectionSubject: MappedConnectionSubject.Source,
       mapPropertyError: '',
-      connectionTypeError: ''
+      connectionTextError: ''
     };
   }
 
@@ -138,8 +138,8 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
     this.setState({ mapProperty: evt.target.value });
   }
 
-  handleTypeChange(evt: React.ChangeEvent<HTMLInputElement>) {
-    this.setState({ connectionType: evt.target.value });
+  handleTextChange(evt: React.ChangeEvent<HTMLInputElement>) {
+    this.setState({ connectionText: evt.target.value });
   }
 
   handleSubjectChange(evt: React.ChangeEvent<HTMLInputElement>) {
@@ -149,9 +149,9 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
   async handleAddButtonClick() {
     //Clear errors that might have already been there.
     let foundError = false;
-    this.setState({ mapPropertyError: '', connectionTypeError: '' });
-    if (this.state.connectionType.length < 1) {
-      this.setState({ connectionTypeError: 'Connection type can\'t be blank!' });
+    this.setState({ mapPropertyError: '', connectionTextError: '' });
+    if (this.state.connectionText.length < 1) {
+      this.setState({ connectionTextError: 'Connection text can\'t be blank!' });
       foundError = true;
     }
     if (this.state.mapProperty.length < 1) {
@@ -165,9 +165,9 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
 
     //No easy validation errors found. Let's try to add it.
     if (!foundError) {
-      const result = await this.actionFunc({ mapProperty: this.state.mapProperty, connectionType: this.state.connectionType, mapConnectionSubject: this.state.mapConnectionSubject });
+      const result = await this.actionFunc({ mapProperty: this.state.mapProperty, connectionText: this.state.connectionText, mapConnectionSubject: this.state.mapConnectionSubject });
       if (result) {
-        this.setState({ mapProperty: '', connectionType: '', mapPropertyError: '', connectionTypeError: '' });
+        this.setState({ mapProperty: '', connectionText: '', mapPropertyError: '', connectionTextError: '' });
       } else {
         this.setState({ mapPropertyError: 'Unable to create duplicate mapping property!' });
       }
@@ -179,12 +179,12 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
       <TableRow>
         <TableCell>
           <TextField id="input-mapConnectionType"
-            placeholder="Connection Type"
-            error={this.state.connectionTypeError.length > 0}
-            helperText={this.state.connectionTypeError}
+            placeholder="Connection Text"
+            error={this.state.connectionTextError.length > 0}
+            helperText={this.state.connectionTextError}
             size="small"
-            value={this.state.connectionType}
-            onChange={this.handleTypeChange.bind(this)} />
+            value={this.state.connectionText}
+            onChange={this.handleTextChange.bind(this)} />
         </TableCell>
         <TableCell>
           <TextField id="input-mapProperty"
@@ -236,7 +236,7 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell><span className="connections-settings-table-header">Connection Type</span></TableCell>
+            <TableCell><span className="connections-settings-table-header">Connection Text</span></TableCell>
             <TableCell><span className="connections-settings-table-header">Controls</span></TableCell>
           </TableRow>
         </TableHead>
@@ -244,11 +244,11 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
           <AddUnmappedConnectionForm actionFunc={this.addUnmappedType.bind(this)} />
           {this.state.unmappedTypes.map((unmappedConnectionType: UnmappedConnectionType) => (
             <TableRow
-              key={unmappedConnectionType.connectionType}
+              key={unmappedConnectionType.connectionText}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row" >
-                <span style={{ marginInlineStart: '0.5em' }}>{unmappedConnectionType.connectionType}</span>
+                <span style={{ marginInlineStart: '0.5em' }}>{unmappedConnectionType.connectionText}</span>
               </TableCell>
               <TableCell align="right">
                 <DeleteButton actionFunc={(arg: UnmappedConnectionType) => { this.deleteUnmappedType(arg) }} connectionType={unmappedConnectionType} />
@@ -291,24 +291,24 @@ class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTy
   constructor(props: AddButtonInterface) {
     super(props);
     this.actionFunc = props.actionFunc;
-    this.state = { connectionType: '', unmappedTypeError: '' }
+    this.state = { connectionText: '', unmappedTypeError: '' }
   }
 
-  handleTypeChange(evt: React.ChangeEvent<HTMLInputElement>) {
-    this.setState({ connectionType: evt.target.value })
+  handleTextChange(evt: React.ChangeEvent<HTMLInputElement>) {
+    this.setState({ connectionText: evt.target.value })
   }
 
   async handleAddButtonClick() {
     let foundError = false;
     this.setState({ unmappedTypeError: '' })
-    if (this.state.connectionType.length < 1) {
-      this.setState({ unmappedTypeError: 'Connection type can\'t be blank!' });
+    if (this.state.connectionText.length < 1) {
+      this.setState({ unmappedTypeError: 'Connection text can\'t be blank!' });
       foundError = true;
     }
     if (!foundError) {
-      const result = await this.actionFunc({ connectionType: this.state.connectionType });
+      const result = await this.actionFunc({ connectionText: this.state.connectionText });
       if (result) {
-        this.setState({ connectionType: '', unmappedTypeError: '' });
+        this.setState({ connectionText: '', unmappedTypeError: '' });
       } else {
 
         this.setState({ unmappedTypeError: 'Unable to create duplicate connection type' });
@@ -323,10 +323,10 @@ class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTy
           <TextField id="input-unmapConnectionType"
             error={this.state.unmappedTypeError.length > 0}
             helperText={this.state.unmappedTypeError}
-            placeholder="Connection Type"
+            placeholder="Connection Text"
             size="small"
-            value={this.state.connectionType}
-            onChange={this.handleTypeChange.bind(this)} />
+            value={this.state.connectionText}
+            onChange={this.handleTextChange.bind(this)} />
         </TableCell>
         <TableCell align="right">
           <AddButton actionFunc={() => { void this.handleAddButtonClick() }} />
