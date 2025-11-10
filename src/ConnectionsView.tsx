@@ -1,7 +1,7 @@
 import { ItemView, TFile, WorkspaceLeaf } from 'obsidian';
 import { Root, createRoot } from 'react-dom/client';
 import { Connection, MappedConnectionSubject } from './connection_types';
-import { obsidianTheme } from './utils';
+import { KeyGenerator, obsidianTheme } from './utils';
 import { Component } from 'react';
 import Button from '@mui/material/Button';
 import Table from '@mui/material/Table';
@@ -99,7 +99,7 @@ export class ConnectionsView extends ItemView {
 
 class ConnectionsViewContent extends Component<ConnectionsViewContentIFace> {
     render() {
-        const kg = new KeyGenerator();
+        const kg = new KeyGenerator('connection-view');
         const { connections, ...props } = this.props;
         return <>
             <Table size="small">
@@ -171,18 +171,6 @@ class ObsidianLink extends Component<ObsidianLinkIFace> {
                 onClick={() => { this.props.openFunc(this.props.linkFile) }}
             >{this.props.linkFile}</a>
         }
-    }
-}
-
-class KeyGenerator {
-    i: number;
-
-    constructor() {
-        this.i = 0;
-    }
-
-    generateKey() {
-        return `connection-${(this.i)++}`;
     }
 }
 

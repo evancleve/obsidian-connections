@@ -13,7 +13,7 @@ export class ConnectionsSettingTab extends PluginSettingTab {
         this.plugin = plugin;
     }
 
-    async addType(typeToAdd: ConnectionType): Promise<boolean> {
+    async addType(typeToAdd: ConnectionType): Promise<ConnectionType | null> {
         return await this.plugin.cm.addConnectionType(typeToAdd);
     }
 

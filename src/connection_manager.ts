@@ -9,14 +9,16 @@ import {
     UnmappedConnectionType
 } from './connection_types';
 import ConnectionsPlugin from './main';
-import { stripLink, textOrFileToLinktext } from './utils';
+import { KeyGenerator, stripLink, textOrFileToLinktext } from './utils';
 import { Notice, TFile } from 'obsidian';
 
 export default class ConnectionManager {
     cp: ConnectionsPlugin
+    kg: KeyGenerator;
 
     constructor(cp: ConnectionsPlugin) {
         this.cp = cp;
+        this.kg = new KeyGenerator('connection-type', this.cp.settings);
     }
 
     async addConnection(connection: Connection): Promise<boolean> {
@@ -165,7 +167,7 @@ export default class ConnectionManager {
         return success;
     }
 
-    async addConnectionType(ct: MappedConnectionType | UnmappedConnectionType): Promise<boolean> {
+    async addConnectionType(ct: MappedConnectionType | UnmappedConnectionType): Promise<MappedConnectionType | UnmappedConnectionType | null> {
         if (isMappedConnectionType(ct)) {
             return await this.addMappedConnectionType(ct);
         } else {
@@ -173,29 +175,40 @@ export default class ConnectionManager {
         }
     }
 
-    async addUnmappedConnectionType(umt: UnmappedConnectionType): Promise<boolean> {
-        const index = this.findUnmappedConnectionType(umt.connectionText);
+    async addUnmappedConnectionType(umt: UnmappedConnectionType): Promise<UnmappedConnectionType | null> {
+        const index = this.findUnmappedConnectionType(umt);
         if (index == -1) {
-            this.cp.settings.unmappedTypes.push(umt);
+            const connectionTypeId = this.kg.generateKey()
+            const newUnmappedType = {
+                connectionText: umt.connectionText,
+                connectionTypeId: connectionTypeId
+            };
+            this.cp.settings.unmappedTypes.push(newUnmappedType);
+            this.cp.connectionTypesMap.set(connectionTypeId, newUnmappedType);
+            //this.cp.settings.connectionOrder.unshift(connectionTypeId);
             await this.cp.saveData(this.cp.settings);
-            return true;
+            return newUnmappedType;
         }
-        return false;
+        return null;
     }
 
-    async addMappedConnectionType(mt: MappedConnectionType): Promise<boolean> {
-        let success: boolean = false;
-        const index = this.findMappedConnectionType(mt.mapProperty);
+    async addMappedConnectionType(mt: MappedConnectionType): Promise<MappedConnectionType | null> {
+        const index = this.findMappedConnectionType(mt);
         if (index == -1) {
-            this.cp.settings.mappedTypes.push({
+            const connectionTypeId = this.kg.generateKey()
+            const newMappedType = {
                 mapProperty: mt.mapProperty,
                 connectionText: mt.connectionText,
-                mapConnectionSubject: mt.mapConnectionSubject
-            });
+                mapConnectionSubject: mt.mapConnectionSubject,
+                connectionTypeId: connectionTypeId
+            };
+            this.cp.settings.mappedTypes.push(newMappedType);
+            this.cp.connectionTypesMap.set(connectionTypeId, newMappedType);
+            //this.cp.settings.connectionOrder.unshift(connectionTypeId);
             await this.cp.saveData(this.cp.settings);
-            success = true;
+            return newMappedType;
         }
-        return success;
+        return null;
     }
 
     async deleteConnectionType(ct: MappedConnectionType | UnmappedConnectionType): Promise<boolean> {
@@ -208,9 +221,10 @@ export default class ConnectionManager {
 
     async deleteUnmappedConnectionType(umt: UnmappedConnectionType): Promise<boolean> {
         let success: boolean = false;
-        const index = this.findUnmappedConnectionType(umt.connectionText);
+        const index = this.findUnmappedConnectionType(umt);
         if (index > -1) {
             this.cp.settings.unmappedTypes.splice(index, 1);
+            if (umt.connectionTypeId) this.cp.connectionTypesMap.delete(umt.connectionTypeId);
             await this.cp.saveData(this.cp.settings);
             success = true;
         }
@@ -219,31 +233,28 @@ export default class ConnectionManager {
 
     async deleteMappedConnectionType(mt: MappedConnectionType): Promise<boolean> {
         let success: boolean = false;
-        const index = this.findMappedConnectionType(mt.mapProperty);
-        if (index != -1) {
+        const index = this.findMappedConnectionType(mt);
+        if (index > -1) {
             this.cp.settings.mappedTypes.splice(index, 1);
+            if (mt.connectionTypeId) this.cp.connectionTypesMap.delete(mt.connectionTypeId);
             await this.cp.saveData(this.cp.settings);
             success = true;
         }
         return success;
     }
 
-    findUnmappedConnectionType(connectionText: string): number {
-        for (let index = 0; index < this.cp.settings.unmappedTypes.length; index++) {
-            const unmappedType = this.cp.settings.unmappedTypes[index];
-            if (unmappedType.connectionText == connectionText) {
-                return index;
-            }
+    findUnmappedConnectionType(umt: UnmappedConnectionType): number {
+        if (umt.connectionTypeId && this.cp.connectionTypesMap.has(umt.connectionTypeId)) {
+            const index = this.cp.settings.unmappedTypes.indexOf(this.cp.connectionTypesMap.get(umt.connectionTypeId) as UnmappedConnectionType);
+            return index;
         }
         return -1;
     }
 
-    findMappedConnectionType(mapProperty: string): number {
-        for (let index = 0; index < this.cp.settings.mappedTypes.length; index++) {
-            const mappedType = this.cp.settings.mappedTypes[index];
-            if (mappedType.mapProperty == mapProperty) {
-                return index;
-            }
+    findMappedConnectionType(mt: MappedConnectionType): number {
+        if (mt.connectionTypeId && this.cp.connectionTypesMap.has(mt.connectionTypeId)) {
+            const index = this.cp.settings.mappedTypes.indexOf(this.cp.connectionTypesMap.get(mt.connectionTypeId) as MappedConnectionType);
+            return index;
         }
         return -1;
     }

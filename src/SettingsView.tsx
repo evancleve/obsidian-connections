@@ -18,8 +18,8 @@ import { ThemeProvider } from '@mui/material/styles';
 
 export interface SettingsIface {
   settings: ConnectionsSettings;
-  deleteFunc: (connectionType: MappedConnectionType | UnmappedConnectionType) => void;
-  addFunc: (connectionType: MappedConnectionType | UnmappedConnectionType) => Promise<boolean>;
+  deleteFunc: (connectionType: MappedConnectionType | UnmappedConnectionType) => Promise<boolean>;
+  addFunc: (connectionType: MappedConnectionType | UnmappedConnectionType) => Promise<MappedConnectionType | UnmappedConnectionType | null>;
 }
 
 export class SettingsView extends Component<SettingsIface> {
@@ -47,8 +47,8 @@ type MappedConnectionTableState = {
 }
 
 class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTableState> {
-  deleteFunc: (mappedType: MappedConnectionType) => void;
-  addFunc: (mappedType: MappedConnectionType) => Promise<boolean>;
+  deleteFunc: (mappedType: MappedConnectionType) => Promise<boolean>;
+  addFunc: (mappedType: MappedConnectionType) => Promise<MappedConnectionType | UnmappedConnectionType | null>;
 
   constructor(props: SettingsIface) {
     super(props);
@@ -93,6 +93,16 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
     </>
   }
 
+  async addMappedType(mappedType: MappedConnectionType): Promise<MappedConnectionType | null> {
+    const returnedMappedType = await this.addFunc(mappedType) as MappedConnectionType;
+    if (returnedMappedType) {
+      const newMappedTypes = this.state.mappedTypes.map((x) => x);
+      newMappedTypes.push(returnedMappedType);
+      this.setState({ mappedTypes: newMappedTypes });
+    }
+    return returnedMappedType;
+  }
+
   deleteMappedType(mappedType: MappedConnectionType) {
     const idx = this.state.mappedTypes.indexOf(mappedType);
     if (idx != -1) {
@@ -102,17 +112,9 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
     }
     this.deleteFunc(mappedType);
   }
-
-  async addMappedType(mappedType: MappedConnectionType): Promise<boolean> {
-    const result = await this.addFunc(mappedType);
-    if (result) {
-      const newMappedTypes = this.state.mappedTypes.map((x) => x);
-      newMappedTypes.push(mappedType);
-      this.setState({ mappedTypes: newMappedTypes });
-    }
-    return result;
-  }
 }
+
+
 
 type MappedTypeFormState = MappedConnectionType & {
   mapPropertyError: string,
@@ -219,8 +221,8 @@ type UnmappedConnectionTableState = {
 }
 
 class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnectionTableState> {
-  deleteFunc: (unmappedConnectionType: UnmappedConnectionType) => void;
-  addFunc: (unmappedConnectionType: UnmappedConnectionType) => Promise<boolean>;
+  deleteFunc: (unmappedConnectionType: UnmappedConnectionType) => Promise<boolean>;
+  addFunc: (unmappedConnectionType: UnmappedConnectionType) => Promise<MappedConnectionType | UnmappedConnectionType | null>;
 
   constructor(props: SettingsIface) {
     super(props);
@@ -260,24 +262,24 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
     </>
   }
 
-  deleteUnmappedType(unmappedConnectionType: UnmappedConnectionType) {
+  async addUnmappedType(unmappedConnectionType: UnmappedConnectionType): Promise<UnmappedConnectionType | null> {
+    const returnedUnmappedType = await this.addFunc(unmappedConnectionType);
+    if (returnedUnmappedType) {
+      const newUnmappedTypes = this.state.unmappedTypes.map((x) => x);
+      newUnmappedTypes.push(returnedUnmappedType);
+      this.setState({ unmappedTypes: newUnmappedTypes })
+    }
+    return returnedUnmappedType;
+  }
+
+  deleteUnmappedType(unmappedConnectionType: UnmappedConnectionType): Promise<boolean> {
     const idx = this.state.unmappedTypes.indexOf(unmappedConnectionType);
     if (idx != -1) {
       const newUnmappedTypes = this.state.unmappedTypes.map((x) => x);
       newUnmappedTypes.splice(idx, 1);
       this.setState({ unmappedTypes: newUnmappedTypes });
     }
-    this.deleteFunc(unmappedConnectionType);
-  }
-
-  async addUnmappedType(unmappedConnectionType: UnmappedConnectionType) {
-    const result = await this.addFunc(unmappedConnectionType);
-    if (result) {
-      const newUnmappedTypes = this.state.unmappedTypes.map((x) => x);
-      newUnmappedTypes.push(unmappedConnectionType);
-      this.setState({ unmappedTypes: newUnmappedTypes })
-    }
-    return result;
+    return this.deleteFunc(unmappedConnectionType);
   }
 }
 

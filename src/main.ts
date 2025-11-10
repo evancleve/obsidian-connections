@@ -13,13 +13,24 @@ export default class ConnectionsPlugin extends Plugin {
     cm: ConnectionsManager;
     cl: ConnectionsLocator;
     nextResolve: TFile | undefined = undefined;
+    connectionTypesMap: Map<string, ConnectionType>;
 
     async onload(): Promise<void> {
 
         this.addSettingTab(new ConnectionsSettingTab(this));
         this.settings = await this.loadData();
         if (!this.settings) {
-            this.settings = { unmappedTypes: [], mappedTypes: [] }
+            this.settings = {
+                unmappedTypes: [],
+                mappedTypes: [],
+                //connectionOrder: [],
+                nextConnectionTypeId: 0,
+                configVersion: 1,
+            }
+        }
+        this.connectionTypesMap = new Map();
+        for (let ct of [...this.settings.mappedTypes, ...this.settings.unmappedTypes]) {
+            if (ct.connectionTypeId) this.connectionTypesMap.set(ct.connectionTypeId, ct);
         }
         this.cm = new ConnectionsManager(this);
         this.cl = new ConnectionsLocator(this.settings, this.app.metadataCache);

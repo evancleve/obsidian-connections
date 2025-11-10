@@ -4,7 +4,10 @@ export function isAnObjectWithProperties(obj: unknown): obj is object {
     return (typeof obj === 'object') && (obj != null)
 }
 
-export type UnmappedConnectionType = { connectionText: string; };
+export type UnmappedConnectionType = {
+    connectionText: string;
+    connectionTypeId?: string;
+};
 
 export function isUnmappedConnectionType(obj: unknown): obj is MappedConnectionType {
     return isAnObjectWithProperties(obj) && ('connectionText' in obj) && (obj.connectionText != '') &&
@@ -28,7 +31,6 @@ export function isConnectionType(obj: unknown): obj is ConnectionType {
     return isUnmappedConnectionType(obj) || isMappedConnectionType(obj);
 }
 
-//export enum MappedConnectionSugject {
 export enum MappedConnectionSubject {
     Source = "source",
     Target = "target"
@@ -71,6 +73,9 @@ export type Connection = MappedConnection | UnmappedConnection;
 export type ConnectionsSettings = {
     unmappedTypes: Array<UnmappedConnectionType>;
     mappedTypes: Array<MappedConnectionType>;
+    //connectionOrder: Array<string>;
+    nextConnectionTypeId: number;
+    configVersion: number;
 };
 
 export type UnmappedConnectionRecord = {

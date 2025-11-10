@@ -1,4 +1,5 @@
 import ConnectionsPlugin from './main';
+import { ConnectionsSettings } from './connection_types';
 import { TFile } from 'obsidian';
 import { createTheme } from '@mui/material/styles';
 
@@ -33,7 +34,7 @@ const styleProperties = {
 
 const inheritStyles = {
     styleOverrides: {
-        root: {...styleProperties, "&.Mui-active": {styleProperties}},
+        root: { ...styleProperties, "&.Mui-active": { styleProperties } },
         hover: styleProperties,
         focus: styleProperties,
     },
@@ -46,3 +47,21 @@ export const obsidianTheme = createTheme({
         MuiInput: inheritStyles,
     },
 });
+
+export class KeyGenerator {
+    prefix: string;
+    settings: ConnectionsSettings | undefined;
+    i: number = 0;
+
+    constructor(prefix: string, settings?: ConnectionsSettings) {
+        this.prefix = prefix;
+        if (settings) this.settings = settings;
+    }
+
+    generateKey() {
+        if (this.settings) {
+            return `${this.prefix}-${(this.settings.nextConnectionTypeId)++}`;
+        }
+        return `${this.prefix}-${(this.i)++}`;
+    }
+}
