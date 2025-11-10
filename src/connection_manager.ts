@@ -19,17 +19,19 @@ export default class ConnectionManager {
         this.cp = cp;
     }
 
-    async addConnection(connection: Connection) {
+    async addConnection(connection: Connection): Promise<boolean> {
         if (isMappedConnection(connection)) {
             return await this.addMappedConnection(connection);
         } else if (isUnmappedConnection(connection)) {
             return await this.addUnmappedConnection(connection);
         }
         console.error('Can\'t find a type for this connection: ', connection);
-        return void new Notice('Can\'t find a type for this connection!');
+        void new Notice('Can\'t find a type for this connection!');
+        return false;
     }
 
-    async addUnmappedConnection(uc: UnmappedConnection) {
+    async addUnmappedConnection(uc: UnmappedConnection): Promise<boolean> {
+        let success: boolean = false;
         // For unmapped connections, the source will always be a valid TFile by definition, 
         // but the typedef include strings as an option, so narrow this.
         if (uc.source instanceof TFile) {
@@ -42,10 +44,13 @@ export default class ConnectionManager {
                     'link': `[[${textOrFileToLinktext(this.cp, uc.target)}]]`
                 })
             });
+            success = true;
         }
+        return success;
     }
 
-    async addMappedConnection(mc: MappedConnection) {
+    async addMappedConnection(mc: MappedConnection): Promise<boolean> {
+        let success: boolean = false;
         if (typeof mc.source === "string") {
             let filename;
             if (mc.source.substring(mc.source.length - 3).toLowerCase().endsWith('.md')) {
@@ -54,6 +59,7 @@ export default class ConnectionManager {
                 filename = mc.source + '.md';
             }
             mc.source = await this.cp.app.vault.create(filename, '');
+            // TODO: What if this fails?
         }
         if (mc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(mc.source, (frontmatter) => {
@@ -66,40 +72,29 @@ export default class ConnectionManager {
                 }
                 frontmatter[mc.mapProperty].push(`[[${textOrFileToLinktext(this.cp, mc.target)}]]`)
             });
+            success = true;
         }
+        return success;
     }
 
-    async addConnectionType(ct: MappedConnectionType | UnmappedConnectionType) {
-        if (isMappedConnectionType(ct)) {
-            return await this.addMappedConnectionType(ct);
-        } else {
-            return await this.addUnmappedConnectionType(ct);
-        }
-    }
-
-    async deleteConnectionType(ct: MappedConnectionType | UnmappedConnectionType) {
-        if (isMappedConnectionType(ct)) {
-            return await this.deleteMappedConnectionType(ct);
-        } else {
-            return await this.deleteUnmappedConnectionType(ct);
-        }
-    }
-
-    async deleteConnection(connection: Connection) {
+    async deleteConnection(connection: Connection): Promise<boolean> {
+        let success: boolean = false;
         if (isMappedConnection(connection)) {
-            await this.deleteMappedConnection(connection);
+            success = await this.deleteMappedConnection(connection);
             this.cp.app.workspace.trigger('connection-delete', { source: connection.source, target: connection.target });
-            return;
+            return success;
         } else if (isUnmappedConnection(connection)) {
-            await this.deleteUnmappedConnection(connection);
+            success = await this.deleteUnmappedConnection(connection);
             this.cp.app.workspace.trigger('connection-delete', { source: connection.source, target: connection.target });
-            return;
+            return success;
         }
         console.error('Can\'t find a type for this connection: ', connection);
-        return void new Notice('Can\'t find a type for this connection!');
+        void new Notice('Can\'t find a type for this connection!');
+        return success;
     }
 
-    async deleteUnmappedConnection(uc: Connection) {
+    async deleteUnmappedConnection(uc: Connection): Promise<boolean> {
+        let success: boolean = false;
         if (uc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(uc.source, (frontmatter) => {
                 if (frontmatter['connections']) {
@@ -109,6 +104,7 @@ export default class ConnectionManager {
                         const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
                         if (connection['connectionText'] == uc.connectionText && (uc.target == resolvedLink || uc.target == strippedLink)) {
                             frontmatter['connections'].splice(pos, 1);
+                            success = true;
                         }
                         pos++;
                     }
@@ -118,11 +114,12 @@ export default class ConnectionManager {
                 }
             });
         }
+        return success;
     }
 
-    async deleteMappedConnection(mc: MappedConnection) {
+    async deleteMappedConnection(mc: MappedConnection): Promise<boolean> {
+        let success: boolean = false;
         let foundProperty: boolean = false;
-        let foundConnection: boolean = false;
         let foundObject: boolean = false;
         if (mc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(mc.source, (frontmatter) => {
@@ -138,8 +135,8 @@ export default class ConnectionManager {
                             const strippedLink = stripLink(connection);
                             const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
                             if (mc.target == resolvedLink || mc.target == strippedLink) {
-                                foundConnection = true;
                                 frontmatter[mc.mapProperty].splice(pos, 1);
+                                success = true;
                             }
                             pos++;
                         }
@@ -150,8 +147,8 @@ export default class ConnectionManager {
                         if (typeof (frontmatter[mc.mapProperty]) === 'object') {
                             foundObject = true;
                         } else {
-                            foundConnection = true;
                             delete frontmatter[mc.mapProperty];
+                            success = true;
                         }
                     }
                 }
@@ -165,7 +162,15 @@ export default class ConnectionManager {
             console.error('Can\'t delete this connection, as it is embedded in an object.', mc);
             void new Notice('Can\'t delete this connection, as it is embedded in an object.');
         }
-        return foundConnection;
+        return success;
+    }
+
+    async addConnectionType(ct: MappedConnectionType | UnmappedConnectionType): Promise<boolean> {
+        if (isMappedConnectionType(ct)) {
+            return await this.addMappedConnectionType(ct);
+        } else {
+            return await this.addUnmappedConnectionType(ct);
+        }
     }
 
     async addUnmappedConnectionType(umt: UnmappedConnectionType): Promise<boolean> {
@@ -178,15 +183,8 @@ export default class ConnectionManager {
         return false;
     }
 
-    async deleteUnmappedConnectionType(umt: UnmappedConnectionType) {
-        const index = this.findUnmappedConnectionType(umt.connectionText);
-        if (index > -1) {
-            this.cp.settings.unmappedTypes.splice(index, 1);
-            await this.cp.saveData(this.cp.settings);
-        }
-    }
-
     async addMappedConnectionType(mt: MappedConnectionType): Promise<boolean> {
+        let success: boolean = false;
         const index = this.findMappedConnectionType(mt.mapProperty);
         if (index == -1) {
             this.cp.settings.mappedTypes.push({
@@ -195,33 +193,55 @@ export default class ConnectionManager {
                 mapConnectionSubject: mt.mapConnectionSubject
             });
             await this.cp.saveData(this.cp.settings);
-            return true;
+            success = true;
         }
-        return false;
+        return success;
     }
 
-    async deleteMappedConnectionType(mt: MappedConnectionType) {
+    async deleteConnectionType(ct: MappedConnectionType | UnmappedConnectionType): Promise<boolean> {
+        if (isMappedConnectionType(ct)) {
+            return await this.deleteMappedConnectionType(ct);
+        } else {
+            return await this.deleteUnmappedConnectionType(ct);
+        }
+    }
+
+    async deleteUnmappedConnectionType(umt: UnmappedConnectionType): Promise<boolean> {
+        let success: boolean = false;
+        const index = this.findUnmappedConnectionType(umt.connectionText);
+        if (index > -1) {
+            this.cp.settings.unmappedTypes.splice(index, 1);
+            await this.cp.saveData(this.cp.settings);
+            success = true;
+        }
+        return success;
+    }
+
+    async deleteMappedConnectionType(mt: MappedConnectionType): Promise<boolean> {
+        let success: boolean = false;
         const index = this.findMappedConnectionType(mt.mapProperty);
         if (index != -1) {
             this.cp.settings.mappedTypes.splice(index, 1);
             await this.cp.saveData(this.cp.settings);
+            success = true;
         }
+        return success;
     }
 
-    findMappedConnectionType(mapProperty: string) {
-        for (let index = 0; index < this.cp.settings.mappedTypes.length; index++) {
-            const mappedType = this.cp.settings.mappedTypes[index];
-            if (mappedType.mapProperty == mapProperty) {
+    findUnmappedConnectionType(connectionText: string): number {
+        for (let index = 0; index < this.cp.settings.unmappedTypes.length; index++) {
+            const unmappedType = this.cp.settings.unmappedTypes[index];
+            if (unmappedType.connectionText == connectionText) {
                 return index;
             }
         }
         return -1;
     }
 
-    findUnmappedConnectionType(connectionText: string) {
-        for (let index = 0; index < this.cp.settings.unmappedTypes.length; index++) {
-            const unmappedType = this.cp.settings.unmappedTypes[index];
-            if (unmappedType.connectionText == connectionText) {
+    findMappedConnectionType(mapProperty: string): number {
+        for (let index = 0; index < this.cp.settings.mappedTypes.length; index++) {
+            const mappedType = this.cp.settings.mappedTypes[index];
+            if (mappedType.mapProperty == mapProperty) {
                 return index;
             }
         }

@@ -17,7 +17,7 @@ export class ConnectionsSettingTab extends PluginSettingTab {
         return await this.plugin.cm.addConnectionType(typeToAdd);
     }
 
-    async deleteType(typeToDelete: ConnectionType) {
+    async deleteType(typeToDelete: ConnectionType): Promise<boolean> {
         return await this.plugin.cm.deleteConnectionType(typeToDelete);
     }
 

@@ -33,7 +33,7 @@ export default class ConnectionsPlugin extends Plugin {
                     new ConnectionsModal(this,
                         currentFile,
                         this.getAllConnectionTypes(),
-                        (result: Connection) => void this.cm.addConnection(result))
+                        async (result: Connection) => await this.cm.addConnection(result))
                         .open()
                 }
             },

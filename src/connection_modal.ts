@@ -13,7 +13,7 @@ export class ConnectionsModal extends Modal {
   private settings: Array<FocusableSetting>;
 
 
-  constructor(cp: ConnectionsPlugin, currentFile: TFile, connectionTypes: Array<ConnectionType>, onSubmit: (result: Connection) => void) {
+  constructor(cp: ConnectionsPlugin, currentFile: TFile, connectionTypes: Array<ConnectionType>, onSubmit: (result: Connection) => Promise<boolean>) {
     super(cp.app);
     this.cp = cp;
     this.fromFile = currentFile;
@@ -68,7 +68,7 @@ export class ConnectionsModal extends Modal {
               bond = { source: this.fromFile, target: this.toFile };
             }
             const connection = Object.assign(bond, { ...this.connectionType });
-            onSubmit(connection);
+            await onSubmit(connection);
             this.close();
           }
           )));
