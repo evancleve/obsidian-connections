@@ -180,9 +180,9 @@ export default class ConnectionManager {
     async addConnectionType(ctd: MappedConnectionTypeDef | UnmappedConnectionTypeDef): Promise<MappedConnectionType | UnmappedConnectionType | null> {
         let nct: MappedConnectionType | UnmappedConnectionType | null;
         if (isMappedConnectionType(ctd)) {
-            nct = await this.addMappedConnectionType(ctd);
+            nct = this.addMappedConnectionType(ctd);
         } else {
-            nct = await this.addUnmappedConnectionType(ctd);
+            nct = this.addUnmappedConnectionType(ctd);
         }
         if (nct) {
             this.cp.connectionTypesMap.set(nct.connectionTypeId, nct);
@@ -192,7 +192,7 @@ export default class ConnectionManager {
         return nct;
     }
 
-    async addUnmappedConnectionType(umctd: UnmappedConnectionTypeDef): Promise<UnmappedConnectionType | null> {
+    addUnmappedConnectionType(umctd: UnmappedConnectionTypeDef): UnmappedConnectionType | null {
         const index = this.findUnmappedConnectionType(umctd, false);
         if (index == -1) {
             const connectionTypeId = this.kg.generateKey()
@@ -206,7 +206,7 @@ export default class ConnectionManager {
         return null;
     }
 
-    async addMappedConnectionType(mctd: MappedConnectionTypeDef): Promise<MappedConnectionType | null> {
+    addMappedConnectionType(mctd: MappedConnectionTypeDef): MappedConnectionType | null {
         const index = this.findMappedConnectionType(mctd, false);
         if (index == -1) {
             const connectionTypeId = this.kg.generateKey()
@@ -225,9 +225,9 @@ export default class ConnectionManager {
     async deleteConnectionType(ct: MappedConnectionType | UnmappedConnectionType): Promise<boolean> {
         let status: boolean = false;
         if (isMappedConnectionType(ct)) {
-            status = await this.deleteMappedConnectionType(ct);
+            status = this.deleteMappedConnectionType(ct);
         } else {
-            status = await this.deleteUnmappedConnectionType(ct);
+            status = this.deleteUnmappedConnectionType(ct);
         }
         if (ct.connectionTypeId) {
             const idx = this.cp.settings.connectionOrder.indexOf(ct.connectionTypeId)
@@ -237,7 +237,7 @@ export default class ConnectionManager {
         return status;
     }
 
-    async deleteUnmappedConnectionType(umct: UnmappedConnectionType): Promise<boolean> {
+    deleteUnmappedConnectionType(umct: UnmappedConnectionType): boolean {
         let success: boolean = false;
         const index = this.findUnmappedConnectionType(umct);
         if (index > -1) {
@@ -248,7 +248,7 @@ export default class ConnectionManager {
         return success;
     }
 
-    async deleteMappedConnectionType(mct: MappedConnectionType): Promise<boolean> {
+    deleteMappedConnectionType(mct: MappedConnectionType): boolean {
         let success: boolean = false;
         const index = this.findMappedConnectionType(mct);
         if (index > -1) {
