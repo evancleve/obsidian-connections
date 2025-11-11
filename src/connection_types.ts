@@ -72,8 +72,8 @@ export const isMappedConnection = (obj: unknown): obj is MappedConnection => {
 }
 
 // Unmapped connections might exist with or without a current entry in settings,
-// so let's not require the ID to be present.
-export type UnmappedConnection = UnmappedConnectionTypeDef & ConnectionBond;
+// so let's not require the ID to have a value.
+export type UnmappedConnection = UnmappedConnectionType & ConnectionBond;
 
 export const isUnmappedConnection = (obj: unknown): obj is MappedConnection => {
     return isUnmappedConnectionType(obj) && isConnectionBond(obj)

@@ -91,7 +91,7 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
               <TableCell><span className="connections-table-content">{mappedType.mapProperty}</span></TableCell>
               <TableCell align="left"><span className="connections-table-content">{mappedType.mapConnectionSubject}</span></TableCell>
               <TableCell align="right">
-                <DeleteButton actionFunc={(arg: MappedConnectionType) => { this.deleteMappedType(arg) }} connectionType={mappedType} />
+                <DeleteButton actionFunc={(arg: MappedConnectionType) => { void this.deleteMappedType(arg) }} connectionType={mappedType} />
               </TableCell>
             </TableRow>
           ))}
@@ -110,14 +110,14 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
     return returnedMappedType;
   }
 
-  deleteMappedType(mappedType: MappedConnectionType) {
+  async deleteMappedType(mappedType: MappedConnectionType) {
     const idx = this.state.mappedTypes.indexOf(mappedType);
     if (idx != -1) {
       const newMappedTypes = this.state.mappedTypes.map((x) => x);
       newMappedTypes.splice(idx, 1);
       this.setState({ mappedTypes: newMappedTypes });
     }
-    this.deleteFunc(mappedType);
+    await this.deleteFunc(mappedType);
   }
 }
 
@@ -260,7 +260,7 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
                 <span style={{ marginInlineStart: '0.5em' }}>{unmappedConnectionType.connectionText}</span>
               </TableCell>
               <TableCell align="right">
-                <DeleteButton actionFunc={(arg: UnmappedConnectionType) => { this.deleteUnmappedType(arg) }} connectionType={unmappedConnectionType} />
+                <DeleteButton actionFunc={(arg: UnmappedConnectionType) => { void this.deleteUnmappedType(arg) }} connectionType={unmappedConnectionType} />
               </TableCell>
             </TableRow>
           ))}

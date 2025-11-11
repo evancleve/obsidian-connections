@@ -24,14 +24,22 @@ export default class ConnectionManager {
     }
 
     async addConnection(connection: Connection): Promise<boolean> {
+        let success: boolean = false;
         if (isMappedConnection(connection)) {
-            return await this.addMappedConnection(connection);
+            success = await this.addMappedConnection(connection);
         } else if (isUnmappedConnection(connection)) {
-            return await this.addUnmappedConnection(connection);
+            success = await this.addUnmappedConnection(connection);
         }
-        console.error('Can\'t find a type for this connection: ', connection);
-        void new Notice('Can\'t find a type for this connection!');
-        return false;
+        if (success) {
+            const idx = this.cp.settings.connectionOrder.indexOf(connection.connectionTypeId)
+            this.cp.settings.connectionOrder.splice(idx, 1);
+            this.cp.settings.connectionOrder.unshift(connection.connectionTypeId);
+            await this.cp.saveData(this.cp.settings);
+        } else {
+            console.error('Can\'t find a type for this connection: ', connection);
+            void new Notice('Can\'t find a type for this connection!');
+        }
+        return success;
     }
 
     async addUnmappedConnection(uc: UnmappedConnection): Promise<boolean> {
@@ -223,7 +231,7 @@ export default class ConnectionManager {
         }
         if (ct.connectionTypeId) {
             const idx = this.cp.settings.connectionOrder.indexOf(ct.connectionTypeId)
-            console.log(this.cp.settings.connectionOrder.splice(idx, 1));
+            this.cp.settings.connectionOrder.splice(idx, 1);
         }
         await this.cp.saveData(this.cp.settings);
         return status;

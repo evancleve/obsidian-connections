@@ -43,10 +43,12 @@ export class ConnectionsModal extends Modal {
             //If a connection type isn't already selected, add the contents of the input box as a new unmapped connection type.
             if (!isConnectionType(this.connectionType)) {
               if (this.enteredText) {
-                this.connectionType = { connectionText: this.enteredText } as ConnectionType;
-                if (!await this.cp.cm.addUnmappedConnectionType(this.connectionType)) {
+                const ct = await this.cp.cm.addUnmappedConnectionType({ connectionText: this.enteredText });
+                if (ct) {
+                  this.connectionType = ct;
+                } else {
                   return void new Notice('Unable to add new unmapped connection type!');
-                };
+                }
               } else {
                 return void new Notice('Connection text can\'t be blank!');
               }

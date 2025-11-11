@@ -29,7 +29,7 @@ export default class ConnectionsPlugin extends Plugin {
             }
         }
         this.connectionTypesMap = new Map();
-        for (let ct of [...this.settings.mappedTypes, ...this.settings.unmappedTypes]) {
+        for (const ct of [...this.settings.mappedTypes, ...this.settings.unmappedTypes]) {
             if (ct.connectionTypeId) this.connectionTypesMap.set(ct.connectionTypeId, ct);
         }
         this.cm = new ConnectionsManager(this);
@@ -43,7 +43,7 @@ export default class ConnectionsPlugin extends Plugin {
                 if (currentFile) {
                     new ConnectionsModal(this,
                         currentFile,
-                        this.getAllConnectionTypes(),
+                        this.getAllConnectionTypesInConnectionOrder(),
                         async (result: Connection) => await this.cm.addConnection(result))
                         .open()
                 }
@@ -114,8 +114,17 @@ export default class ConnectionsPlugin extends Plugin {
         });
     }
 
-    getAllConnectionTypes(): Array<ConnectionType> {
-        return this.settings.unmappedTypes.concat(this.settings.mappedTypes) as Array<ConnectionType>
+    getAllConnectionTypesInConnectionOrder(): Array<ConnectionType> {
+        const allConnectionTypesInOrder: Array<ConnectionType> = [];
+        for (const ctId of this.settings.connectionOrder) {
+            const ct = this.connectionTypesMap.get(ctId);
+            if (ct) {
+                allConnectionTypesInOrder.push(ct);
+            }
+        }
+        return allConnectionTypesInOrder;
+        //TODO: handle case where not all connection types are in the order
+        //return this.settings.unmappedTypes.concat(this.settings.mappedTypes) as Array<ConnectionType>
     }
 
     async activateView() {
