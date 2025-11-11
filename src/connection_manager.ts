@@ -193,7 +193,7 @@ export default class ConnectionManager {
     }
 
     async addUnmappedConnectionType(umctd: UnmappedConnectionTypeDef): Promise<UnmappedConnectionType | null> {
-        const index = this.findUnmappedConnectionType(umctd);
+        const index = this.findUnmappedConnectionType(umctd, false);
         if (index == -1) {
             const connectionTypeId = this.kg.generateKey()
             const newUnmappedType = {
@@ -207,7 +207,7 @@ export default class ConnectionManager {
     }
 
     async addMappedConnectionType(mctd: MappedConnectionTypeDef): Promise<MappedConnectionType | null> {
-        const index = this.findMappedConnectionType(mctd);
+        const index = this.findMappedConnectionType(mctd, false);
         if (index == -1) {
             const connectionTypeId = this.kg.generateKey()
             const newMappedType = {
@@ -259,18 +259,24 @@ export default class ConnectionManager {
         return success;
     }
 
-    findUnmappedConnectionType(umct: UnmappedConnectionType | UnmappedConnectionTypeDef): number {
-        if ('connectionTypeId' in umct && umct.connectionTypeId && this.cp.connectionTypesMap.has(umct.connectionTypeId)) {
+    findUnmappedConnectionType(umct: UnmappedConnectionType | UnmappedConnectionTypeDef, exact: boolean = true): number {
+        if (exact && 'connectionTypeId' in umct && umct.connectionTypeId && this.cp.connectionTypesMap.has(umct.connectionTypeId)) {
             const index = this.cp.settings.unmappedTypes.indexOf(this.cp.connectionTypesMap.get(umct.connectionTypeId) as UnmappedConnectionType);
             return index;
+        }
+        if (!exact) {
+            return this.cp.settings.unmappedTypes.findIndex((elem) => umct.connectionText === elem.connectionText);
         }
         return -1;
     }
 
-    findMappedConnectionType(mct: MappedConnectionType | MappedConnectionTypeDef): number {
-        if ('connectionTypeId' in mct && mct.connectionTypeId && this.cp.connectionTypesMap.has(mct.connectionTypeId)) {
+    findMappedConnectionType(mct: MappedConnectionType | MappedConnectionTypeDef, exact: boolean = true): number {
+        if (exact && 'connectionTypeId' in mct && mct.connectionTypeId && this.cp.connectionTypesMap.has(mct.connectionTypeId)) {
             const index = this.cp.settings.mappedTypes.indexOf(this.cp.connectionTypesMap.get(mct.connectionTypeId) as MappedConnectionType);
             return index;
+        }
+        if (!exact) {
+            return this.cp.settings.mappedTypes.findIndex((elem) => mct.mapProperty === elem.mapProperty);
         }
         return -1;
     }

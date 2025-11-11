@@ -82,7 +82,7 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
           <AddMappedConnectionForm actionFunc={this.addMappedType.bind(this)} />
           {this.state.mappedTypes.map((mappedType: MappedConnectionType) => (
             <TableRow
-              key={mappedType.mapProperty}
+              key={mappedType.connectionTypeId}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row" >
@@ -253,7 +253,7 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
           <AddUnmappedConnectionForm actionFunc={this.addUnmappedType.bind(this)} />
           {this.state.unmappedTypes.map((unmappedConnectionType: UnmappedConnectionType) => (
             <TableRow
-              key={unmappedConnectionType.connectionText}
+              key={unmappedConnectionType.connectionTypeId}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row" >
