@@ -2,7 +2,7 @@ import { PluginSettingTab } from "obsidian";
 import { createRoot, Root } from 'react-dom/client';
 import { SettingsView } from './SettingsView';
 import type ConnectionsPlugin from "./main";
-import { ConnectionType } from "./connection_types";
+import { ConnectionType, ConnectionTypeDef } from "./connection_types";
 
 export class ConnectionsSettingTab extends PluginSettingTab {
     plugin: ConnectionsPlugin;
@@ -13,7 +13,7 @@ export class ConnectionsSettingTab extends PluginSettingTab {
         this.plugin = plugin;
     }
 
-    async addType(typeToAdd: ConnectionType): Promise<ConnectionType | null> {
+    async addType(typeToAdd: ConnectionTypeDef): Promise<ConnectionType | null> {
         return await this.plugin.cm.addConnectionType(typeToAdd);
     }
 

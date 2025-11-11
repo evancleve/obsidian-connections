@@ -23,7 +23,7 @@ export default class ConnectionsPlugin extends Plugin {
             this.settings = {
                 unmappedTypes: [],
                 mappedTypes: [],
-                //connectionOrder: [],
+                connectionOrder: [],
                 nextConnectionTypeId: 0,
                 configVersion: 1,
             }
@@ -117,10 +117,6 @@ export default class ConnectionsPlugin extends Plugin {
     getAllConnectionTypes(): Array<ConnectionType> {
         return this.settings.unmappedTypes.concat(this.settings.mappedTypes) as Array<ConnectionType>
     }
-
-    // TODO: Implement any necessary unloading.
-    // async onunload(): Promise<void> {
-    // }
 
     async activateView() {
         let leaf: WorkspaceLeaf | null = null;

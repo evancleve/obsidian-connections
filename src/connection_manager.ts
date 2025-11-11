@@ -5,8 +5,10 @@ import {
     MappedConnection,
     isMappedConnection,
     MappedConnectionType,
+    MappedConnectionTypeDef,
     isMappedConnectionType,
-    UnmappedConnectionType
+    UnmappedConnectionType,
+    UnmappedConnectionTypeDef
 } from './connection_types';
 import ConnectionsPlugin from './main';
 import { KeyGenerator, stripLink, textOrFileToLinktext } from './utils';
@@ -43,7 +45,7 @@ export default class ConnectionManager {
                 }
                 frontmatter['connections'].push({
                     'connectionText': uc.connectionText,
-                    'link': `[[${textOrFileToLinktext(this.cp, uc.target)}]]`
+                    'target': `[[${textOrFileToLinktext(this.cp, uc.target)}]]`
                 })
             });
             success = true;
@@ -102,7 +104,7 @@ export default class ConnectionManager {
                 if (frontmatter['connections']) {
                     let pos = 0;
                     for (const connection of frontmatter['connections']) {
-                        const strippedLink = stripLink(connection['link']);
+                        const strippedLink = stripLink(connection['target']);
                         const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
                         if (connection['connectionText'] == uc.connectionText && (uc.target == resolvedLink || uc.target == strippedLink)) {
                             frontmatter['connections'].splice(pos, 1);
@@ -167,93 +169,99 @@ export default class ConnectionManager {
         return success;
     }
 
-    async addConnectionType(ct: MappedConnectionType | UnmappedConnectionType): Promise<MappedConnectionType | UnmappedConnectionType | null> {
-        if (isMappedConnectionType(ct)) {
-            return await this.addMappedConnectionType(ct);
+    async addConnectionType(ctd: MappedConnectionTypeDef | UnmappedConnectionTypeDef): Promise<MappedConnectionType | UnmappedConnectionType | null> {
+        let nct: MappedConnectionType | UnmappedConnectionType | null;
+        if (isMappedConnectionType(ctd)) {
+            nct = await this.addMappedConnectionType(ctd);
         } else {
-            return await this.addUnmappedConnectionType(ct);
+            nct = await this.addUnmappedConnectionType(ctd);
         }
+        if (nct) {
+            this.cp.connectionTypesMap.set(nct.connectionTypeId, nct);
+            this.cp.settings.connectionOrder.unshift(nct.connectionTypeId);
+            await this.cp.saveData(this.cp.settings);
+        }
+        return nct;
     }
 
-    async addUnmappedConnectionType(umt: UnmappedConnectionType): Promise<UnmappedConnectionType | null> {
-        const index = this.findUnmappedConnectionType(umt);
+    async addUnmappedConnectionType(umctd: UnmappedConnectionTypeDef): Promise<UnmappedConnectionType | null> {
+        const index = this.findUnmappedConnectionType(umctd);
         if (index == -1) {
             const connectionTypeId = this.kg.generateKey()
             const newUnmappedType = {
-                connectionText: umt.connectionText,
+                connectionText: umctd.connectionText,
                 connectionTypeId: connectionTypeId
             };
             this.cp.settings.unmappedTypes.push(newUnmappedType);
-            this.cp.connectionTypesMap.set(connectionTypeId, newUnmappedType);
-            //this.cp.settings.connectionOrder.unshift(connectionTypeId);
-            await this.cp.saveData(this.cp.settings);
             return newUnmappedType;
         }
         return null;
     }
 
-    async addMappedConnectionType(mt: MappedConnectionType): Promise<MappedConnectionType | null> {
-        const index = this.findMappedConnectionType(mt);
+    async addMappedConnectionType(mctd: MappedConnectionTypeDef): Promise<MappedConnectionType | null> {
+        const index = this.findMappedConnectionType(mctd);
         if (index == -1) {
             const connectionTypeId = this.kg.generateKey()
             const newMappedType = {
-                mapProperty: mt.mapProperty,
-                connectionText: mt.connectionText,
-                mapConnectionSubject: mt.mapConnectionSubject,
+                mapProperty: mctd.mapProperty,
+                connectionText: mctd.connectionText,
+                mapConnectionSubject: mctd.mapConnectionSubject,
                 connectionTypeId: connectionTypeId
             };
             this.cp.settings.mappedTypes.push(newMappedType);
-            this.cp.connectionTypesMap.set(connectionTypeId, newMappedType);
-            //this.cp.settings.connectionOrder.unshift(connectionTypeId);
-            await this.cp.saveData(this.cp.settings);
             return newMappedType;
         }
         return null;
     }
 
     async deleteConnectionType(ct: MappedConnectionType | UnmappedConnectionType): Promise<boolean> {
+        let status: boolean = false;
         if (isMappedConnectionType(ct)) {
-            return await this.deleteMappedConnectionType(ct);
+            status = await this.deleteMappedConnectionType(ct);
         } else {
-            return await this.deleteUnmappedConnectionType(ct);
+            status = await this.deleteUnmappedConnectionType(ct);
         }
+        if (ct.connectionTypeId) {
+            const idx = this.cp.settings.connectionOrder.indexOf(ct.connectionTypeId)
+            console.log(this.cp.settings.connectionOrder.splice(idx, 1));
+        }
+        await this.cp.saveData(this.cp.settings);
+        return status;
     }
 
-    async deleteUnmappedConnectionType(umt: UnmappedConnectionType): Promise<boolean> {
+    async deleteUnmappedConnectionType(umct: UnmappedConnectionType): Promise<boolean> {
         let success: boolean = false;
-        const index = this.findUnmappedConnectionType(umt);
+        const index = this.findUnmappedConnectionType(umct);
         if (index > -1) {
             this.cp.settings.unmappedTypes.splice(index, 1);
-            if (umt.connectionTypeId) this.cp.connectionTypesMap.delete(umt.connectionTypeId);
-            await this.cp.saveData(this.cp.settings);
+            if (umct.connectionTypeId) this.cp.connectionTypesMap.delete(umct.connectionTypeId);
             success = true;
         }
         return success;
     }
 
-    async deleteMappedConnectionType(mt: MappedConnectionType): Promise<boolean> {
+    async deleteMappedConnectionType(mct: MappedConnectionType): Promise<boolean> {
         let success: boolean = false;
-        const index = this.findMappedConnectionType(mt);
+        const index = this.findMappedConnectionType(mct);
         if (index > -1) {
             this.cp.settings.mappedTypes.splice(index, 1);
-            if (mt.connectionTypeId) this.cp.connectionTypesMap.delete(mt.connectionTypeId);
-            await this.cp.saveData(this.cp.settings);
+            if (mct.connectionTypeId) this.cp.connectionTypesMap.delete(mct.connectionTypeId);
             success = true;
         }
         return success;
     }
 
-    findUnmappedConnectionType(umt: UnmappedConnectionType): number {
-        if (umt.connectionTypeId && this.cp.connectionTypesMap.has(umt.connectionTypeId)) {
-            const index = this.cp.settings.unmappedTypes.indexOf(this.cp.connectionTypesMap.get(umt.connectionTypeId) as UnmappedConnectionType);
+    findUnmappedConnectionType(umct: UnmappedConnectionType | UnmappedConnectionTypeDef): number {
+        if ('connectionTypeId' in umct && umct.connectionTypeId && this.cp.connectionTypesMap.has(umct.connectionTypeId)) {
+            const index = this.cp.settings.unmappedTypes.indexOf(this.cp.connectionTypesMap.get(umct.connectionTypeId) as UnmappedConnectionType);
             return index;
         }
         return -1;
     }
 
-    findMappedConnectionType(mt: MappedConnectionType): number {
-        if (mt.connectionTypeId && this.cp.connectionTypesMap.has(mt.connectionTypeId)) {
-            const index = this.cp.settings.mappedTypes.indexOf(this.cp.connectionTypesMap.get(mt.connectionTypeId) as MappedConnectionType);
+    findMappedConnectionType(mct: MappedConnectionType | MappedConnectionTypeDef): number {
+        if ('connectionTypeId' in mct && mct.connectionTypeId && this.cp.connectionTypesMap.has(mct.connectionTypeId)) {
+            const index = this.cp.settings.mappedTypes.indexOf(this.cp.connectionTypesMap.get(mct.connectionTypeId) as MappedConnectionType);
             return index;
         }
         return -1;

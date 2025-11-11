@@ -1,4 +1,11 @@
-import { ConnectionsSettings, MappedConnectionType, MappedConnectionSubject, UnmappedConnectionType } from './connection_types';
+import {
+  ConnectionsSettings,
+  MappedConnectionTypeDef,
+  MappedConnectionType,
+  MappedConnectionSubject,
+  UnmappedConnectionType,
+  UnmappedConnectionTypeDef
+} from './connection_types';
 import { obsidianTheme } from './utils';
 import { Component } from 'react';
 import Box from '@mui/material/Box';
@@ -19,7 +26,7 @@ import { ThemeProvider } from '@mui/material/styles';
 export interface SettingsIface {
   settings: ConnectionsSettings;
   deleteFunc: (connectionType: MappedConnectionType | UnmappedConnectionType) => Promise<boolean>;
-  addFunc: (connectionType: MappedConnectionType | UnmappedConnectionType) => Promise<MappedConnectionType | UnmappedConnectionType | null>;
+  addFunc: (connectionType: MappedConnectionTypeDef | UnmappedConnectionTypeDef) => Promise<MappedConnectionType | UnmappedConnectionType | null>;
 }
 
 export class SettingsView extends Component<SettingsIface> {
@@ -48,7 +55,7 @@ type MappedConnectionTableState = {
 
 class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTableState> {
   deleteFunc: (mappedType: MappedConnectionType) => Promise<boolean>;
-  addFunc: (mappedType: MappedConnectionType) => Promise<MappedConnectionType | UnmappedConnectionType | null>;
+  addFunc: (mappedType: MappedConnectionTypeDef) => Promise<MappedConnectionType | UnmappedConnectionType | null>;
 
   constructor(props: SettingsIface) {
     super(props);
@@ -93,8 +100,8 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
     </>
   }
 
-  async addMappedType(mappedType: MappedConnectionType): Promise<MappedConnectionType | null> {
-    const returnedMappedType = await this.addFunc(mappedType) as MappedConnectionType;
+  async addMappedType(mappedTypeDef: MappedConnectionTypeDef): Promise<MappedConnectionType | null> {
+    const returnedMappedType = await this.addFunc(mappedTypeDef) as MappedConnectionType;
     if (returnedMappedType) {
       const newMappedTypes = this.state.mappedTypes.map((x) => x);
       newMappedTypes.push(returnedMappedType);
@@ -116,13 +123,13 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
 
 
 
-type MappedTypeFormState = MappedConnectionType & {
+type MappedTypeFormState = MappedConnectionTypeDef & {
   mapPropertyError: string,
   connectionTextError: string
 }
 
 class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFormState> {
-  actionFunc: (mt: MappedConnectionType) => Promise<boolean>;
+  actionFunc: (mt: MappedConnectionTypeDef) => Promise<boolean>;
 
   constructor(props: AddButtonInterface) {
     super(props);
@@ -283,12 +290,12 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
   }
 }
 
-type UnmappedTypeFormState = UnmappedConnectionType & {
+type UnmappedTypeFormState = UnmappedConnectionTypeDef & {
   unmappedTypeError: string
 }
 
 class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTypeFormState> {
-  actionFunc: (ut: UnmappedConnectionType) => Promise<boolean>;
+  actionFunc: (ut: UnmappedConnectionTypeDef) => Promise<boolean>;
 
   constructor(props: AddButtonInterface) {
     super(props);
@@ -339,7 +346,7 @@ class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTy
 }
 
 interface AddButtonInterface {
-  actionFunc: (connectionType: MappedConnectionType | UnmappedConnectionType) => Promise<boolean>;
+  actionFunc: (connectionType: MappedConnectionTypeDef | UnmappedConnectionTypeDef) => Promise<boolean>;
 }
 
 const AddButton = (props: { actionFunc: () => void }) => {

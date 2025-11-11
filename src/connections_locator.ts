@@ -1,7 +1,7 @@
 import {
     Connection,
     ConnectionsSettings,
-    isUnmappedConnectionRecord,
+    isUnmappedConnectionEntry,
 } from './connection_types';
 import { FrontmatterLinkCache, FrontMatterCache, MetadataCache, TFile } from 'obsidian';
 import { stripLink } from './utils';
@@ -72,7 +72,7 @@ export default class ConnectionsLocator {
 
     getUnmappedConnectionsFromCache(links: Array<FrontmatterLinkCache>, source: TFile, specificTarget: TFile | null = null): Array<Connection> {
         const unmappedIndexes: Array<number> = [];
-        const connectionsRegExp = RegExp('^connections\\.([\\d+])\\.link$');
+        const connectionsRegExp = RegExp('^connections\\.([\\d+])\\.target$');
         for (const fl of links) {
             const result = connectionsRegExp.exec(fl.key);
             if (result) {
@@ -87,16 +87,16 @@ export default class ConnectionsLocator {
         const metadata: FrontMatterCache | null = this.getMetadata(source);
         if (metadata && 'connections' in metadata) {
             for (const idx of indexes) {
-                if (!isUnmappedConnectionRecord(metadata.connections[idx])) {
+                if (!isUnmappedConnectionEntry(metadata.connections[idx])) {
                     continue;
                 }
                 let linkedFile: TFile | string | null;
-                linkedFile = this.getValidFileFromStringOrNull(metadata.connections[idx].link);
+                linkedFile = this.getValidFileFromStringOrNull(metadata.connections[idx].target);
                 if (specificTarget && linkedFile !== specificTarget) {
                     continue;
                 }
                 if (!linkedFile) {
-                    linkedFile = stripLink(metadata.connections[idx].link);
+                    linkedFile = stripLink(metadata.connections[idx].target);
                 }
                 unmappedConnections.push({
                     source: source,
