@@ -40,8 +40,8 @@ export class SettingsView extends Component<SettingsIface> {
         <Box component="section">
           <MappedConnectionsTable {...this.props} />
         </Box>
-        <hr className="section-divider" />
-        <Box component="section" className="unmapped-connections-table">
+        <hr className="connections-plugin-section-divider" />
+        <Box component="section" className="connections-plugin-unmapped-connections-table">
           <UnmappedConnectionsTable {...this.props} />
         </Box>
       </ThemeProvider>
@@ -68,14 +68,14 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
 
   render() {
     return <>
-      <h3>Mapped Connection Types</h3>
+      <h3>Mapped connection types</h3>
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell><span className="connections-settings-table-header">Connection Text</span></TableCell>
-            <TableCell><span className="connections-settings-table-header">Frontmatter Property</span></TableCell>
-            <TableCell><span className="connections-settings-table-header">Subject</span></TableCell>
-            <TableCell><span className="connections-settings-table-header">Controls</span></TableCell>
+            <TableCell><span className="connections-plugin-settings-table-header">Connection text</span></TableCell>
+            <TableCell><span className="connections-plugin-settings-table-header">Frontmatter property</span></TableCell>
+            <TableCell><span className="connections-plugin-settings-table-header">Subject</span></TableCell>
+            <TableCell><span className="connections-plugin-settings-table-header">Controls</span></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -83,13 +83,13 @@ class MappedConnectionsTable extends Component<SettingsIface, MappedConnectionTa
           {this.state.mappedTypes.map((mappedType: MappedConnectionType) => (
             <TableRow
               key={mappedType.connectionTypeId}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+              className="connections-plugin-connection-table-row"
             >
               <TableCell component="th" scope="row" >
-                <span className="connections-table-content">{mappedType.connectionText}</span>
+                <span className="connections-plugin-table-content">{mappedType.connectionText}</span>
               </TableCell>
-              <TableCell><span className="connections-table-content">{mappedType.mapProperty}</span></TableCell>
-              <TableCell align="left"><span className="connections-table-content">{mappedType.mapConnectionSubject}</span></TableCell>
+              <TableCell><span className="connections-plugin-table-content">{mappedType.mapProperty}</span></TableCell>
+              <TableCell align="left"><span className="connections-plugin-table-content">{mappedType.mapConnectionSubject}</span></TableCell>
               <TableCell align="right">
                 <DeleteButton actionFunc={(arg: MappedConnectionType) => { void this.deleteMappedType(arg) }} connectionType={mappedType} />
               </TableCell>
@@ -188,7 +188,7 @@ class AddMappedConnectionForm extends Component<AddButtonInterface, MappedTypeFo
       <TableRow>
         <TableCell>
           <TextField id="input-mapConnectionType"
-            placeholder="Connection Text"
+            placeholder="Connection text"
             error={this.state.connectionTextError.length > 0}
             helperText={this.state.connectionTextError}
             size="small"
@@ -241,12 +241,12 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
   render() {
 
     return <>
-      <h3>Unmapped Connection Types</h3>
+      <h3>Unmapped connection types</h3>
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell><span className="connections-settings-table-header">Connection Text</span></TableCell>
-            <TableCell><span className="connections-settings-table-header">Controls</span></TableCell>
+            <TableCell><span className="connections-plugin-settings-table-header">Connection text</span></TableCell>
+            <TableCell><span className="connections-plugin-settings-table-header">Controls</span></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -254,10 +254,10 @@ class UnmappedConnectionsTable extends Component<SettingsIface, UnmappedConnecti
           {this.state.unmappedTypes.map((unmappedConnectionType: UnmappedConnectionType) => (
             <TableRow
               key={unmappedConnectionType.connectionTypeId}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+              className="connections-plugin-connection-table-row"
             >
               <TableCell component="th" scope="row" >
-                <span style={{ marginInlineStart: '0.5em' }}>{unmappedConnectionType.connectionText}</span>
+                <span className="connections-plugin-table-content">{unmappedConnectionType.connectionText}</span>
               </TableCell>
               <TableCell align="right">
                 <DeleteButton actionFunc={(arg: UnmappedConnectionType) => { void this.deleteUnmappedType(arg) }} connectionType={unmappedConnectionType} />
@@ -332,7 +332,7 @@ class AddUnmappedConnectionForm extends Component<AddButtonInterface, UnmappedTy
           <TextField id="input-unmapConnectionType"
             error={this.state.unmappedTypeError.length > 0}
             helperText={this.state.unmappedTypeError}
-            placeholder="Connection Text"
+            placeholder="Connection text"
             size="small"
             value={this.state.connectionText}
             onChange={this.handleTextChange.bind(this)} />

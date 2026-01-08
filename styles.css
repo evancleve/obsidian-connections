@@ -1,12 +1,12 @@
-.connections-table-content {
-  padding-inline-start: 1em;
+.connections-plugin-table-content {
+  padding-inline-start: 0.5em;
 }
 
-.connections-settings-table-header {
+.connections-plugin-settings-table-header {
   font-weight: bold;
 }
 
-.connections-unresolved {
+.connections-plugin-unresolved-link {
   color: var(--link-unresolved-color);
   opacity: var(--link-unresolved-opacity);
   filter: var(--link-unresolved-filter);
@@ -14,17 +14,13 @@
   text-decoration-color: var(--link-unresolved-decoration-color);
 }
 
-#input-mapSubject {
-  min-width: 6ch;
-}
-
-.same-document {
+.connections-plugin-same-document-link {
   text-decoration: underline;
   text-decoration-style: dashed;
   text-underline-offset: 3px;
 }
 
-.section-divider {
+.connections-plugin-section-divider {
   border: none;
   border-top: 3px double;
   overflow: visible;
@@ -35,7 +31,7 @@
   margin-top: 3em;
 }
 
-.section-divider::after {
+.connections-plugin-section-divider::after {
   background: white;
   content: "§";
   font-size: 120%;
@@ -44,6 +40,15 @@
   top: -13px;
 }
 
-.unmapped-connections-table {
+.connections-plugin-unmapped-connections-table {
   margin-top: 3em;
+}
+
+.connections-plugin-connection-table-row:last-child td,
+.connections-plugin-connection-table-row:last-child th {
+  border: 0;
+}
+
+#input-mapSubject {
+  min-width: 6ch;
 }

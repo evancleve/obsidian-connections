@@ -105,15 +105,15 @@ class ConnectionsViewContent extends Component<ConnectionsViewContentIFace> {
             <Table size="small">
                 <TableHead>
                     <TableRow>
-                        <TableCell><span className="connections-settings-table-header">Connection</span></TableCell>
-                        <TableCell><span className="connections-settings-table-header"></span></TableCell>
+                        <TableCell><span className="connections-plugin-settings-table-header">Connection</span></TableCell>
+                        <TableCell><span className="connections-plugin-settings-table-header"></span></TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {connections.map((connection: Connection) => (
                         <TableRow
                             key={kg.generateKey()}
-                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                            className="connections-plugin-connection-table-row">
                             <TableCell>
                                 <ConnectionLine
                                     connection={connection}
@@ -156,7 +156,7 @@ class ObsidianLink extends Component<ObsidianLinkIFace> {
     render() {
         if (this.props.linkFile instanceof TFile) {
             if (this.props.linkFile === this.props.activeFile) {
-                return <span className="same-document">{this.props.linkFile.basename}</span>
+                return <span className="connections-plugin-same-document-link">{this.props.linkFile.basename}</span>
             } else {
                 return <a
                     href={this.props.linkFile.path}
@@ -167,7 +167,7 @@ class ObsidianLink extends Component<ObsidianLinkIFace> {
         } else {
             return <a
                 href={this.props.linkFile}
-                className='connections-unresolved is-unresolved internal-link'
+                className='connections-plugin-unresolved-link is-unresolved internal-link'
                 onClick={() => { this.props.openFunc(this.props.linkFile) }}
             >{this.props.linkFile}</a>
         }
