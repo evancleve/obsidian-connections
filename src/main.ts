@@ -38,15 +38,19 @@ export default class ConnectionsPlugin extends Plugin {
         this.addCommand({
             id: 'add-connection',
             name: 'Add connection to another note',
-            callback: () => {
+            checkCallback: (checking: boolean) => {
                 const currentFile = this.app.workspace.getActiveFile();
                 if (currentFile) {
-                    new ConnectionsModal(this,
-                        currentFile,
-                        this.getAllConnectionTypesInConnectionOrder(),
-                        async (result: Connection) => await this.cm.addConnection(result))
-                        .open()
+                    if (!checking) {
+                        new ConnectionsModal(this,
+                            currentFile,
+                            this.getAllConnectionTypesInConnectionOrder(),
+                            async (result: Connection) => await this.cm.addConnection(result))
+                            .open()
+                    }
+                    return true;
                 }
+                return false;
             },
         });
 
