@@ -68,30 +68,30 @@ export default class ConnectionsPlugin extends Plugin {
                 deleteConnectionFunc: this.cm.deleteConnection.bind(this.cm)
             }));
 
-        this.app.workspace.on('file-open', file => {
+        this.registerEvent(this.app.workspace.on('file-open', file => {
             if (file) {
                 this.refreshConnectionsView(file);
             }
-        });
+        }));
 
-        this.app.workspace.on('active-leaf-change', leaf => {
+        this.registerEvent(this.app.workspace.on('active-leaf-change', leaf => {
             if (leaf && leaf.view instanceof ConnectionsView) {
                 const file = this.app.workspace.getActiveFile();
                 if (file) this.refreshConnectionsView(file);
             }
-        });
+        }));
 
         // When mapped connections get deleted from the target's view, we don't trigger a
         // refresh via resolve or file-open, so we need a custom event.
         // @ts-ignore
-        this.app.workspace.on('connection-delete', (data: { source: TFile, target: TFile | string }) => {
+        this.registerEvent(this.app.workspace.on('connection-delete', (data: { source: TFile, target: TFile | string }) => {
             const activeFile = this.app.workspace.getActiveFile();
             if (activeFile === data.target) this.nextResolve = data.source;
-        });
+        }));
 
         this.app.workspace.onLayoutReady(async () => { await this.activateView() });
         this.app.workspace.onLayoutReady(() => {
-            this.app.metadataCache.on('resolve', (resolvedFile) => {
+            this.registerEvent(this.app.metadataCache.on('resolve', (resolvedFile) => {
                 const activeFile = this.app.workspace.getActiveFile();
                 if (!activeFile) return;
                 if (activeFile === resolvedFile) {
@@ -107,14 +107,14 @@ export default class ConnectionsPlugin extends Plugin {
 
                 const resolvedMetadata = this.app.metadataCache.getFileCache(resolvedFile);
                 if (resolvedMetadata && resolvedMetadata.frontmatterLinks) {
-                    const activeFileLinkText = this.app.metadataCache.fileToLinktext(activeFile, '');
+                    const activeFileLinkText = this.app.metadataCache.fileToLinktext(activeFile, activeFile.path);
                     for (const fmLink of resolvedMetadata.frontmatterLinks) {
                         if (fmLink.link === activeFileLinkText) {
                             this.refreshConnectionsView(activeFile);
                         }
                     }
                 }
-            });
+            }));
         });
     }
 

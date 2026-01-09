@@ -109,11 +109,11 @@ export default class ConnectionManager {
         let success: boolean = false;
         if (uc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(uc.source, (frontmatter) => {
-                if (frontmatter['connections']) {
+                if (uc.source instanceof TFile && frontmatter['connections']) {
                     let pos = 0;
                     for (const connection of frontmatter['connections']) {
                         const strippedLink = stripLink(connection['target']);
-                        const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
+                        const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, uc.source.path);
                         if (connection['connectionText'] == uc.connectionText && (uc.target == resolvedLink || uc.target == strippedLink)) {
                             frontmatter['connections'].splice(pos, 1);
                             success = true;
@@ -135,7 +135,7 @@ export default class ConnectionManager {
         let foundObject: boolean = false;
         if (mc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(mc.source, (frontmatter) => {
-                if (frontmatter[mc.mapProperty]) {
+                if (mc.source instanceof TFile && frontmatter[mc.mapProperty]) {
                     foundProperty = true;
                     if (Array.isArray(frontmatter[mc.mapProperty])) {
                         let pos = 0;
@@ -145,7 +145,7 @@ export default class ConnectionManager {
                                 break;
                             }
                             const strippedLink = stripLink(connection);
-                            const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, '');
+                            const resolvedLink = this.cp.app.metadataCache.getFirstLinkpathDest(strippedLink, mc.source.path);
                             if (mc.target == resolvedLink || mc.target == strippedLink) {
                                 frontmatter[mc.mapProperty].splice(pos, 1);
                                 success = true;

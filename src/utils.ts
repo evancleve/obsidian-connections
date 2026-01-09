@@ -19,7 +19,7 @@ export function stripLink(link: string) {
 }
 
 export function textOrFileToLinktext(cp: ConnectionsPlugin, file: TFile | string): string {
-    return file instanceof TFile ? cp.app.metadataCache.fileToLinktext(file, '') : file;
+    return file instanceof TFile ? cp.app.metadataCache.fileToLinktext(file, file.path) : file;
 }
 
 const styleProperties = {

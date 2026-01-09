@@ -37,7 +37,7 @@ export default class ConnectionsLocator {
         //@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
         const backlinks = this.metadataCache.getBacklinksForFile(target);
         for (const linkingFilename of backlinks.keys()) {
-            const source = this.getValidFileFromStringOrNull(linkingFilename);
+            const source = this.getValidFileFromStringOrNull(linkingFilename, target.path);
             if (source) {
                 const frontlinks: Array<FrontmatterLinkCache> | undefined = this.metadataCache.getFileCache(source)?.frontmatterLinks;
                 if (frontlinks) {
@@ -54,7 +54,8 @@ export default class ConnectionsLocator {
         for (const mappedType of this.settings.mappedTypes) {
             for (const fl of links) {
                 if (mappedType.mapProperty === fl.key || fl.key.startsWith(mappedType.mapProperty + '.')) {
-                    const target = this.getValidFileFromStringOrNull(fl.link);
+                    const sourcePath = specificTarget ? specificTarget.path : '';
+                    const target = this.getValidFileFromStringOrNull(fl.link, sourcePath);
                     //Bail out if this isn't the target we're looking for.
                     if (target && specificTarget && target !== specificTarget) {
                         continue;
@@ -91,7 +92,7 @@ export default class ConnectionsLocator {
                     continue;
                 }
                 let linkedFile: TFile | string | null;
-                linkedFile = this.getValidFileFromStringOrNull(metadata.connections[idx].target);
+                linkedFile = this.getValidFileFromStringOrNull(metadata.connections[idx].target, source.path);
                 if (specificTarget && linkedFile !== specificTarget) {
                     continue;
                 }
@@ -110,10 +111,10 @@ export default class ConnectionsLocator {
         return unmappedConnections;
     }
 
-    getValidFileFromStringOrNull(name: string): TFile | null {
+    getValidFileFromStringOrNull(name: string, sourcePath: string): TFile | null {
         const linkedFile = this.metadataCache.getFirstLinkpathDest(
             stripLink(name),
-            ''
+            sourcePath
         );
         if (linkedFile instanceof TFile) {
             return linkedFile
