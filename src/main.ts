@@ -1,5 +1,5 @@
 import { Connection, ConnectionsSettings, ConnectionType } from './connection_types';
-import { OpenViewState, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
+import { OpenViewState, Keymap, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { ConnectionsModal } from './connection_modal';
 import { ConnectionsSettingTab } from './settings_tab'
 import ConnectionsManager from './connection_manager'
@@ -81,6 +81,18 @@ export default class ConnectionsPlugin extends Plugin {
             }
         }));
 
+        // @ts-ignore
+        this.registerEvent(this.app.workspace.on('connection-type-add', () => {
+            const file = this.app.workspace.getActiveFile();
+            if (file) this.refreshConnectionsView(file);
+        }));
+
+        // @ts-ignore
+        this.registerEvent(this.app.workspace.on('connection-type-delete', () => {
+            const file = this.app.workspace.getActiveFile();
+            if (file) this.refreshConnectionsView(file);
+        }));
+
         // When mapped connections get deleted from the target's view, we don't trigger a
         // refresh via resolve or file-open, so we need a custom event.
         // @ts-ignore
@@ -94,20 +106,22 @@ export default class ConnectionsPlugin extends Plugin {
             this.registerEvent(this.app.metadataCache.on('resolve', (resolvedFile) => {
                 const activeFile = this.app.workspace.getActiveFile();
                 if (!activeFile) return;
+                
+                //Refresh view if the file that got resolved is the one we're looking at.
                 if (activeFile === resolvedFile) {
                     this.refreshConnectionsView(activeFile);
                     return;
                 }
-
+                //Refresh view if the connection-delete event was triggered.
                 if (this.nextResolve && resolvedFile === this.nextResolve) {
                     this.refreshConnectionsView(activeFile);
                     this.nextResolve = undefined;
                     return;
                 }
-
+                //Refresh view if the resolved file contains a link to the file we're looking at.
                 const resolvedMetadata = this.app.metadataCache.getFileCache(resolvedFile);
                 if (resolvedMetadata && resolvedMetadata.frontmatterLinks) {
-                    const activeFileLinkText = this.app.metadataCache.fileToLinktext(activeFile, activeFile.path);
+                    const activeFileLinkText = this.app.metadataCache.fileToLinktext(activeFile, resolvedFile.path);
                     for (const fmLink of resolvedMetadata.frontmatterLinks) {
                         if (fmLink.link === activeFileLinkText) {
                             this.refreshConnectionsView(activeFile);
@@ -154,19 +168,10 @@ export default class ConnectionsPlugin extends Plugin {
         });
     }
 
-    async openLinkedNote(linkedNote: TFile | string): Promise<void> {
+    async openLinkedNote(linkedNote: TFile | string, activeFile: TFile, evt: MouseEvent): Promise<void> {
         //@ts-ignore - apparently an undocumented Obsidian feature, but a feature nonetheless!
         const mode = this.app.vault.getConfig("defaultViewMode");
-        const leaf = this.app.workspace.getMostRecentLeaf();
-        if (leaf) {
-            if (linkedNote instanceof TFile) {
-                await leaf.openFile(
-                    linkedNote,
-                    { active: true, mode } as OpenViewState
-                );
-                return;
-            }
-            await this.app.workspace.openLinkText(linkedNote, '', undefined, { active: true, mode } as OpenViewState)
-        }
+        let linkText = linkedNote instanceof TFile ? this.app.metadataCache.fileToLinktext(linkedNote, activeFile.path) : linkedNote;
+        await this.app.workspace.openLinkText(linkText, '', Keymap.isModEvent(evt), { active: true, mode } as OpenViewState);
     }
 }

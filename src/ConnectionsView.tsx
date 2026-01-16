@@ -14,7 +14,7 @@ import { ThemeProvider } from '@mui/material/styles';
 
 export const VIEW_TYPE_CONNECTIONS = 'connections-view';
 
-type OpenLinkFunction = (file: TFile | string) => void;
+type OpenLinkFunction = (file: TFile | string, activeFile: TFile, evt: MouseEvent) => void;
 type DeleteConnectionFunction = (arg: Connection) => void;
 
 interface ConnectionsViewContentIFace {
@@ -161,14 +161,14 @@ class ObsidianLink extends Component<ObsidianLinkIFace> {
                 return <a
                     href={this.props.linkFile.path}
                     className='internal-link'
-                    onClick={() => { this.props.openFunc(this.props.linkFile) }}
+                    onClick={(evt) => { this.props.openFunc(this.props.linkFile, this.props.activeFile, evt.nativeEvent) }}
                 >{this.props.linkFile.basename}</a>
             }
         } else {
             return <a
                 href={this.props.linkFile}
                 className='connections-plugin-unresolved-link is-unresolved internal-link'
-                onClick={() => { this.props.openFunc(this.props.linkFile) }}
+                onClick={(evt) => { this.props.openFunc(this.props.linkFile, this.props.activeFile, evt.nativeEvent) }}
             >{this.props.linkFile}</a>
         }
     }

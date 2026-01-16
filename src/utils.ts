@@ -18,8 +18,8 @@ export function stripLink(link: string) {
     }
 }
 
-export function textOrFileToLinktext(cp: ConnectionsPlugin, file: TFile | string): string {
-    return file instanceof TFile ? cp.app.metadataCache.fileToLinktext(file, file.path) : file;
+export function textOrFileToLinktext(cp: ConnectionsPlugin, targetFile: TFile | string, sourceFile: TFile): string {
+    return targetFile instanceof TFile ? cp.app.metadataCache.fileToLinktext(targetFile, sourceFile.path) : targetFile;
 }
 
 const styleProperties = {

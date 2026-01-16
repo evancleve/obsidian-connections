@@ -48,14 +48,15 @@ export default class ConnectionManager {
         // but the typedef include strings as an option, so narrow this.
         if (uc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(uc.source, (frontmatter) => {
-                if (!frontmatter['connections']) {
-                    frontmatter['connections'] = [];
-                }
-                frontmatter['connections'].push({
-                    'connectionText': uc.connectionText,
-                    'target': `[[${textOrFileToLinktext(this.cp, uc.target)}]]`
-                })
-            });
+                if (uc.source instanceof TFile) {
+                    if (!frontmatter['connections']) {
+                        frontmatter['connections'] = [];
+                    }
+                    frontmatter['connections'].push({
+                        'connectionText': uc.connectionText,
+                        'target': `[[${textOrFileToLinktext(this.cp, uc.target, uc.source)}]]`
+                    })
+            }});
             success = true;
         }
         return success;
@@ -75,15 +76,16 @@ export default class ConnectionManager {
         }
         if (mc.source instanceof TFile) {
             await this.cp.app.fileManager.processFrontMatter(mc.source, (frontmatter) => {
-                if (!frontmatter[mc.mapProperty]) {
-                    frontmatter[mc.mapProperty] = [];
-                }
-                //Since we're adding a new connection, we might to convert an existing property to a array.
-                if (!Array.isArray(frontmatter[mc.mapProperty])) {
-                    frontmatter[mc.mapProperty] = [frontmatter[mc.mapProperty]];
-                }
-                frontmatter[mc.mapProperty].push(`[[${textOrFileToLinktext(this.cp, mc.target)}]]`)
-            });
+                if (mc.source instanceof TFile) {
+                    if (!frontmatter[mc.mapProperty]) {
+                        frontmatter[mc.mapProperty] = [];
+                    }
+                    //Since we're adding a new connection, we might to convert an existing property to a array.
+                    if (!Array.isArray(frontmatter[mc.mapProperty])) {
+                        frontmatter[mc.mapProperty] = [frontmatter[mc.mapProperty]];
+                    }
+                    frontmatter[mc.mapProperty].push(`[[${textOrFileToLinktext(this.cp, mc.target, mc.source)}]]`)
+            }});
             success = true;
         }
         return success;
@@ -189,6 +191,7 @@ export default class ConnectionManager {
             this.cp.settings.connectionOrder.unshift(nct.connectionTypeId);
             await this.cp.saveData(this.cp.settings);
         }
+        this.cp.app.workspace.trigger('connection-type-add');
         return nct;
     }
 
@@ -234,6 +237,7 @@ export default class ConnectionManager {
             this.cp.settings.connectionOrder.splice(idx, 1);
         }
         await this.cp.saveData(this.cp.settings);
+        this.cp.app.workspace.trigger('connection-type-delete');
         return status;
     }
 
