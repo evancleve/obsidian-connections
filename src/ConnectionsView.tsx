@@ -161,14 +161,18 @@ class ObsidianLink extends Component<ObsidianLinkIFace> {
                 return <a
                     href={this.props.linkFile.path}
                     className='internal-link'
-                    onClick={(evt) => { this.props.openFunc(this.props.linkFile, this.props.activeFile, evt.nativeEvent) }}
+                    onClick={(evt) => { 
+                        evt.preventDefault();
+                        this.props.openFunc(this.props.linkFile, this.props.activeFile, evt.nativeEvent);}}
                 >{this.props.linkFile.basename}</a>
             }
         } else {
             return <a
                 href={this.props.linkFile}
                 className='connections-plugin-unresolved-link is-unresolved internal-link'
-                onClick={(evt) => { this.props.openFunc(this.props.linkFile, this.props.activeFile, evt.nativeEvent) }}
+                onClick={(evt) => { 
+                    evt.preventDefault();
+                    this.props.openFunc(this.props.linkFile, this.props.activeFile, evt.nativeEvent) }}
             >{this.props.linkFile}</a>
         }
     }
